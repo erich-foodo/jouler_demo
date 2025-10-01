@@ -646,12 +646,14 @@ function App() {
                 const currentEfficiencyGain = currentData?.systemMetrics?.systemEfficiencyGain || 0;
                 const newEfficiencyGain = currentEfficiencyGain + 3; // 3% increase
                 
-                // Calculate value using Borefield 2 loading pattern
+                // Calculate delta value between old and new efficiency
                 const bf2Load = Math.abs(bf2Metrics.currentLoadKW);
-                const savingsKWElec = bf2Load * (newEfficiencyGain / 100);
-                const energyCost = savingsKWElec * 15;
-                const capacityCost = savingsKWElec * 250;
-                const totalValue = energyCost + capacityCost;
+                const oldSavingsKWElec = bf2Load * (currentEfficiencyGain / 100);
+                const newSavingsKWElec = bf2Load * (newEfficiencyGain / 100);
+                const deltaSavingsKWElec = newSavingsKWElec - oldSavingsKWElec;
+                const deltaEnergyCost = deltaSavingsKWElec * 15;
+                const deltaCapacityCost = deltaSavingsKWElec * 250;
+                const totalValue = deltaEnergyCost + deltaCapacityCost;
 
                 return (
                   <div>
@@ -675,9 +677,9 @@ function App() {
                       </div>
                       
                       <div className="text-center bg-orange-50 rounded-lg p-3 border border-orange-200">
-                        <div className="text-sm text-orange-600 font-medium">Asset Value</div>
+                        <div className="text-sm text-orange-600 font-medium">Additional Asset Value</div>
                         <div className="text-2xl font-bold text-orange-900">${totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
-                        <div className="text-xs text-orange-600">Annual value</div>
+                        <div className="text-xs text-orange-600">From efficiency gain</div>
                       </div>
                     </div>
                     
