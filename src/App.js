@@ -1296,6 +1296,107 @@ function App() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Borefield Cost Analysis */}
+                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                    <div className="flex items-center mb-6">
+                      <span className="text-2xl mr-3">🏭</span>
+                      <h3 className="text-xl font-semibold text-gray-900">Thermal Source Economic Analysis</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {(() => {
+                        const borefields = [
+                          {
+                            id: 1,
+                            name: 'Borefield 1',
+                            capitalCost: 2000000,
+                            annualHeatingKW: 1200000, // Example annual heating in kW
+                            annualCoolingKW: 300000,  // Example annual cooling in kW
+                            color: 'blue'
+                          },
+                          {
+                            id: 2, 
+                            name: 'Borefield 2',
+                            capitalCost: 1500000,
+                            annualHeatingKW: 800000,
+                            annualCoolingKW: 200000,
+                            color: 'green'
+                          },
+                          {
+                            id: 3,
+                            name: 'Borefield 3', 
+                            capitalCost: 2500000,
+                            annualHeatingKW: 1400000,
+                            annualCoolingKW: 350000,
+                            color: 'purple'
+                          }
+                        ];
+
+                        return borefields.map(bf => {
+                          const irr = 0.10; // 10% IRR
+                          const lifespan = 50; // 50 year lifespan
+                          const annualCost = (bf.capitalCost * (1 + irr)) / lifespan;
+                          const thermalService = bf.annualHeatingKW + bf.annualCoolingKW;
+                          const levelizedCost = annualCost / thermalService;
+                          
+                          const colorClasses = {
+                            blue: 'from-blue-600 to-blue-700 border-blue-200',
+                            green: 'from-green-600 to-green-700 border-green-200', 
+                            purple: 'from-purple-600 to-purple-700 border-purple-200'
+                          };
+
+                          return (
+                            <div key={bf.id} className={`bg-gradient-to-br ${colorClasses[bf.color]} rounded-lg p-6 text-white border-2`}>
+                              <h4 className="text-lg font-semibold mb-4">{bf.name}</h4>
+                              
+                              <div className="space-y-3">
+                                <div className="bg-white bg-opacity-20 rounded-lg p-3">
+                                  <div className="text-sm opacity-90">Capital Cost</div>
+                                  <div className="text-xl font-bold">${(bf.capitalCost / 1000000).toFixed(1)}M</div>
+                                </div>
+                                
+                                <div className="bg-white bg-opacity-20 rounded-lg p-3">
+                                  <div className="text-sm opacity-90">Annual Cost</div>
+                                  <div className="text-lg font-semibold">${(annualCost / 1000).toFixed(0)}k</div>
+                                  <div className="text-xs opacity-75">10% IRR, 50yr lifespan</div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-white bg-opacity-20 rounded-lg p-2">
+                                    <div className="text-xs opacity-90">Heating</div>
+                                    <div className="text-sm font-semibold">{(bf.annualHeatingKW / 1000000).toFixed(1)} MW</div>
+                                  </div>
+                                  <div className="bg-white bg-opacity-20 rounded-lg p-2">
+                                    <div className="text-xs opacity-90">Cooling</div>
+                                    <div className="text-sm font-semibold">{(bf.annualCoolingKW / 1000000).toFixed(1)} MW</div>
+                                  </div>
+                                </div>
+                                
+                                <div className="bg-white bg-opacity-30 rounded-lg p-3 border border-white border-opacity-30">
+                                  <div className="text-sm opacity-90">Thermal Service</div>
+                                  <div className="text-lg font-bold">{(thermalService / 1000000).toFixed(1)} MW</div>
+                                </div>
+                                
+                                <div className="bg-white bg-opacity-30 rounded-lg p-3 border border-white border-opacity-30">
+                                  <div className="text-sm opacity-90">Levelized Cost of Thermal</div>
+                                  <div className="text-lg font-bold">${levelizedCost.toFixed(3)}/kW</div>
+                                  <div className="text-lg font-bold">${(levelizedCost / 0.2843451638).toFixed(2)}/ton</div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                    
+                    <div className="mt-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="text-sm text-gray-600 text-center">
+                        <strong>Economic Analysis:</strong> Levelized cost calculation based on 10% IRR and 50-year operational lifespan. 
+                        Thermal service represents combined annual heating and cooling capacity delivered by each borefield.
+                      </div>
+                    </div>
+                  </div>
                 </>
               );
             })()}
