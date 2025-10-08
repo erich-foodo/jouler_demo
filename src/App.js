@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ThermalNetworkDataProcessor } from './utils/dataProcessor';
 import NetworkVisualization from './components/NetworkVisualization';
 import EfficiencyDashboard from './components/EfficiencyDashboard';
 import AssetValuation from './components/AssetValuation';
+import * as d3 from 'd3';
+import jsPDF from 'jspdf';
 import './App.css';
 
 function App() {
@@ -99,6 +101,689 @@ function App() {
     setCurrentHour(parseInt(hour));
   };
 
+  // Helper functions for Performance Validation calculations
+  const calculateAnnualSavings = () => {
+    if (!timeSeriesData || timeSeriesData.length === 0) return { savings: 0, economicValue: 0 };
+    
+    const totalSavings = timeSeriesData.reduce((sum, hour) => sum + (hour.savings || 0), 0);
+    const economicValue = totalSavings * 0.15; // $0.15 per kWh saved
+    
+    return { 
+      savings: totalSavings / 1000, // Convert to kWh
+      economicValue: economicValue / 1000 // Convert to dollars
+    };
+  };
+
+  const calculateMonthlyDemand = () => {
+    if (!timeSeriesData || timeSeriesData.length === 0) return { monthlyData: [], economicValue: 0 };
+    
+    const monthlyData = [];
+    const hoursPerMonth = 730; // Approximate hours per month
+    
+    for (let month = 0; month < 12; month++) {
+      const startHour = month * hoursPerMonth;
+      const endHour = Math.min((month + 1) * hoursPerMonth, timeSeriesData.length);
+      const monthData = timeSeriesData.slice(startHour, endHour);
+      
+      if (monthData.length > 0) {
+        const maxGeoLoad = Math.max(...monthData.map(h => h.geoTotal || 0));
+        const maxAirLoad = Math.max(...monthData.map(h => h.airTotal || 0));
+        
+        monthlyData.push({
+          month: month + 1,
+          geoMax: maxGeoLoad / 1000, // Convert to kW
+          airMax: maxAirLoad / 1000,
+          difference: (maxAirLoad - maxGeoLoad) / 1000
+        });
+      }
+    }
+    
+    const totalDifference = monthlyData.reduce((sum, month) => sum + month.difference, 0);
+    const economicValue = totalDifference * 15; // $15 per kW difference
+    
+    return { monthlyData, economicValue };
+  };
+
+  const calculateCapacityComparison = () => {
+    if (!timeSeriesData || timeSeriesData.length === 0) return { geoMax: 0, airMax: 0, geoHour: 0, airHour: 0, economicValue: 0 };
+    
+    let maxGeoLoad = 0;
+    let maxAirLoad = 0;
+    let maxGeoHour = 0;
+    let maxAirHour = 0;
+    
+    timeSeriesData.forEach((hour, index) => {
+      if ((hour.geoTotal || 0) > maxGeoLoad) {
+        maxGeoLoad = hour.geoTotal;
+        maxGeoHour = index + 1;
+      }
+      if ((hour.airTotal || 0) > maxAirLoad) {
+        maxAirLoad = hour.airTotal;
+        maxAirHour = index + 1;
+      }
+    });
+    
+    const capacityDifference = (maxAirLoad - maxGeoLoad) / 1000; // Convert to kW
+    const economicValue = capacityDifference * 200; // $200 per kW difference
+    
+    return {
+      geoMax: maxGeoLoad / 1000,
+      airMax: maxAirLoad / 1000,
+      geoHour: maxGeoHour,
+      airHour: maxAirHour,
+      economicValue
+    };
+  };
+
+  // PDF Generation Functions
+  const generateEmissionsReport = () => {
+    const reportData = {
+      title: "Monthly Carbon Impact Report",
+      period: "November 2024",
+      reportType: "emissions",
+      metrics: {
+        executiveSummary: "The Framingham Thermal Energy Network avoided 21.4 tons of CO₂ emissions in November 2024 compared to individual air-source heat pump systems, representing an 87% reduction in carbon intensity.",
+        totalEmissions: "3.2 tons",
+        ashpBaseline: "24.6 tons",
+        reduction: "21.4 tons (87%)",
+        carbonIntensity: "22 kg/MWh",
+        renewableContent: "45% grid renewable",
+        totalCO2Avoided: "187 tons CO₂ (2024 YTD)",
+        equivalentTo: "41 passenger vehicles removed from roads for one year"
+      }
+    };
+    generateAdvancedPDF(reportData);
+  };
+
+  const generateEnergyReport = () => {
+    const reportData = {
+      title: "Monthly Energy Performance Report",
+      period: "November 2024",
+      reportType: "energy",
+      metrics: {
+        executiveSummary: "The Framingham Thermal Energy Network delivered 145,230 kWh of thermal energy in November 2024, achieving 38% energy savings compared to individual air-source heat pump systems through superior efficiency and geothermal technology.",
+        thermalDelivered: "145,230 kWh",
+        electricalInput: "34,579 kWh",
+        ashpElectrical: "55,692 kWh",
+        energySavings: "21,113 kWh (38%)",
+        averageCOP: "4.2",
+        peakCOP: "5.1",
+        minimumCOP: "3.4",
+        peakDemand: "285 kW",
+        loadFactor: "71%",
+        systemUptime: "99.4%"
+      }
+    };
+    generateAdvancedPDF(reportData);
+  };
+
+  const generateEconomicReport = () => {
+    const reportData = {
+      title: "Quarterly Economic Performance Report",
+      period: "Q4 2024 (October - December)",
+      reportType: "economic",
+      metrics: {
+        executiveSummary: "The Framingham Thermal Energy Network delivered $28,450 in cost savings during Q4 2024 compared to individual air-source heat pump systems, driven by superior energy efficiency and reduced peak demand charges.",
+        energySavings: "$9,886 (38%)",
+        demandSavings: "$1,968 (38%)",
+        omSavings: "$16,596 (85%)",
+        totalSavings: "$28,450 (56%)",
+        incentiveEarned: "$12,320",
+        ytdSavings: "$113,800",
+        avgBuildingSavings: "$3,286"
+      }
+    };
+    generateAdvancedPDF(reportData);
+  };
+
+  const generatePerformanceReport = () => {
+    const reportData = {
+      title: "Annual Performance Report",
+      period: "Calendar Year 2024",
+      reportType: "performance",
+      metrics: {
+        executiveSummary: "The Framingham Thermal Energy Network successfully completed its first full year of operation in 2024, delivering 1,847 MWh of thermal energy to 35 buildings while achieving 38% energy savings, 56% cost reduction, and 87% carbon emissions reduction compared to individual air-source heat pump systems.",
+        thermalDelivered: "1,847 MWh",
+        systemCOP: "4.2 avg COP",
+        energySavings: "268 MWh (38%)",
+        systemUptime: "99.1%",
+        carbonAvoided: "187 tons CO₂",
+        emissionsReduction: "87%",
+        buildingsServed: "35",
+        peakLoad: "337 kW",
+        totalCostSavings: "$113,800",
+        incentivesEarned: "$49,280"
+      }
+    };
+    generateAdvancedPDF(reportData);
+  };
+
+  const generateAdvancedPDF = (data) => {
+    const doc = new jsPDF();
+    
+    // Set up document properties
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 20;
+    const contentWidth = pageWidth - 2 * margin;
+    let yPosition = 30;
+    let pageCount = 1;
+
+    // Helper functions for advanced PDF generation
+    const addNewPage = () => {
+      doc.addPage();
+      pageCount++;
+      yPosition = 30;
+    };
+
+    const checkPageSpace = (requiredSpace = 40) => {
+      if (yPosition + requiredSpace > pageHeight - 40) {
+        addNewPage();
+      }
+    };
+
+    const addText = (text, fontSize = 10, fontStyle = 'normal', align = 'left') => {
+      checkPageSpace();
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', fontStyle);
+      
+      if (fontSize > 12 && align === 'center') {
+        const textWidth = doc.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor;
+        const xPosition = (pageWidth - textWidth) / 2;
+        doc.text(text, xPosition, yPosition);
+        yPosition += fontSize * 0.5;
+      } else {
+        const lines = doc.splitTextToSize(text, contentWidth);
+        doc.text(lines, margin, yPosition);
+        yPosition += lines.length * fontSize * 0.4;
+      }
+      yPosition += 5;
+    };
+
+    const addSeparator = () => {
+      checkPageSpace(15);
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 15;
+    };
+
+    const addTable = (headers, rows) => {
+      checkPageSpace(60);
+      const colWidth = contentWidth / headers.length;
+      const rowHeight = 20;
+      
+      // Draw headers
+      doc.setFillColor(240, 240, 240);
+      doc.rect(margin, yPosition, contentWidth, rowHeight, 'F');
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      
+      headers.forEach((header, i) => {
+        doc.text(header, margin + (i * colWidth) + 5, yPosition + 12);
+      });
+      
+      yPosition += rowHeight;
+      
+      // Draw rows
+      doc.setFont('helvetica', 'normal');
+      rows.forEach((row, rowIndex) => {
+        if (rowIndex % 2 === 0) {
+          doc.setFillColor(250, 250, 250);
+          doc.rect(margin, yPosition, contentWidth, rowHeight, 'F');
+        }
+        
+        row.forEach((cell, i) => {
+          doc.text(String(cell), margin + (i * colWidth) + 5, yPosition + 12);
+        });
+        
+        yPosition += rowHeight;
+      });
+      
+      yPosition += 10;
+    };
+
+    const addMetricBox = (label, value, color = [59, 130, 246]) => {
+      checkPageSpace(50);
+      const boxWidth = contentWidth / 2 - 10;
+      const boxHeight = 40;
+      
+      // Draw colored border
+      doc.setDrawColor(...color);
+      doc.setLineWidth(2);
+      doc.rect(margin, yPosition, boxWidth, boxHeight);
+      
+      // Add label
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text(label, margin + 5, yPosition + 15);
+      
+      // Add value
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text(value, margin + 5, yPosition + 30);
+      
+      // Reset color
+      doc.setTextColor(0, 0, 0);
+    };
+
+    // Add enhanced header with logo area
+    doc.setFillColor(41, 128, 185);
+    doc.rect(0, 0, pageWidth, 25, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    addText('FRAMINGHAM THERMAL NETWORK', 16, 'bold', 'center');
+    
+    doc.setTextColor(0, 0, 0);
+    yPosition = 40;
+    addText(data.title, 18, 'bold', 'center');
+    addText(`Reporting Period: ${data.period}`, 14, 'normal', 'center');
+    
+    addSeparator();
+    
+    // Executive Summary
+    addText('EXECUTIVE SUMMARY', 14, 'bold');
+    
+    const executiveSummary = data.metrics.executiveSummary || 'This report provides comprehensive measurement and verification analysis.';
+    const summaryLines = doc.splitTextToSize(executiveSummary, contentWidth);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(summaryLines, margin, yPosition);
+    yPosition += summaryLines.length * 4 + 10;
+    
+    addSeparator();
+
+    // Report-specific content based on type
+    if (data.reportType === 'emissions') {
+      // Carbon Performance Summary
+      addText('CARBON PERFORMANCE SUMMARY', 14, 'bold');
+      
+      const carbonTable = [
+        ['Metric', 'TEN', 'ASHP Baseline', 'Reduction'],
+        ['Total Emissions', data.metrics.totalEmissions, data.metrics.ashpBaseline, data.metrics.reduction],
+        ['Carbon Intensity', data.metrics.carbonIntensity, '169 kg/MWh', '147 kg/MWh'],
+        ['Grid Renewable', data.metrics.renewableContent, data.metrics.renewableContent, '-']
+      ];
+      
+      addTable(carbonTable[0], carbonTable.slice(1));
+      
+      addText('CUMULATIVE IMPACT (2024 YTD)', 14, 'bold');
+      addText(`Total Carbon Avoided: ${data.metrics.totalCO2Avoided}`);
+      addText(`Equivalent To: ${data.metrics.equivalentTo}`);
+      
+    } else if (data.reportType === 'energy') {
+      // Energy Consumption Comparison
+      addText('ENERGY CONSUMPTION COMPARISON', 14, 'bold');
+      
+      const energyTable = [
+        ['Metric', 'TEN', 'ASHP Baseline', 'Savings'],
+        ['Electrical Input', data.metrics.electricalInput, data.metrics.ashpElectrical, data.metrics.energySavings],
+        ['Thermal Output', data.metrics.thermalDelivered, data.metrics.thermalDelivered, '-'],
+        ['Average COP', data.metrics.averageCOP, '2.6', '-'],
+        ['Cost @ $0.15/kWh', '$5,187', '$8,354', '$3,167']
+      ];
+      
+      addTable(energyTable[0], energyTable.slice(1));
+      
+      addText('SYSTEM PERFORMANCE METRICS', 14, 'bold');
+      addText(`Peak COP: ${data.metrics.peakCOP}`);
+      addText(`Minimum COP: ${data.metrics.minimumCOP}`);
+      addText(`Peak Demand: ${data.metrics.peakDemand}`);
+      addText(`Load Factor: ${data.metrics.loadFactor}`);
+      addText(`System Uptime: ${data.metrics.systemUptime}`);
+      
+    } else if (data.reportType === 'economic') {
+      // Cost Savings Summary
+      addText('COST SAVINGS SUMMARY', 14, 'bold');
+      
+      const economicTable = [
+        ['Cost Category', 'TEN Cost', 'ASHP Cost', 'Savings'],
+        ['Energy Charges', '$16,248', '$26,134', data.metrics.energySavings],
+        ['Demand Charges', '$3,264', '$5,232', data.metrics.demandSavings],
+        ['Operations & Maint.', '$2,840', '$19,436', data.metrics.omSavings],
+        ['Total Operating Cost', '$22,352', '$50,802', data.metrics.totalSavings]
+      ];
+      
+      addTable(economicTable[0], economicTable.slice(1));
+      
+      addText('YEAR-TO-DATE FINANCIAL PERFORMANCE', 14, 'bold');
+      addText(`Total Cost Avoidance: ${data.metrics.ytdSavings}`);
+      addText(`Average Building Savings: ${data.metrics.avgBuildingSavings}`);
+      addText(`Incentives Earned: ${data.metrics.incentiveEarned}`);
+      
+    } else if (data.reportType === 'performance') {
+      // Annual Impact Summary
+      addText('ANNUAL IMPACT SUMMARY', 14, 'bold');
+      
+      const performanceTable = [
+        ['Category', 'Performance', 'Economic Performance'],
+        ['Thermal Delivered', data.metrics.thermalDelivered, `Total Cost Savings: ${data.metrics.totalCostSavings}`],
+        ['System Efficiency', data.metrics.systemCOP, `Incentives Earned: ${data.metrics.incentivesEarned}`],
+        ['Energy Savings', data.metrics.energySavings, ''],
+        ['System Uptime', data.metrics.systemUptime, '']
+      ];
+      
+      addTable(performanceTable[0], performanceTable.slice(1));
+      
+      addText('ENVIRONMENTAL PERFORMANCE', 14, 'bold');
+      addText(`Carbon Avoided: ${data.metrics.carbonAvoided}`);
+      addText(`Emissions Reduction: ${data.metrics.emissionsReduction}`);
+      
+      addText('OPERATIONAL PERFORMANCE', 14, 'bold');
+      addText(`Buildings Served: ${data.metrics.buildingsServed}`);
+      addText(`Peak Load Served: ${data.metrics.peakLoad}`);
+    }
+
+    addSeparator();
+
+    // Methodology & Measurement
+    addText('METHODOLOGY & MEASUREMENT', 14, 'bold');
+    addText('M&V Approach: IPMVP Option D (Calibrated Simulation)');
+    
+    addText('Measurement Infrastructure:', 12, 'bold');
+    addText('• Physical Metering: 15 sensors (distribution, borefield, electrical)');
+    addText('• Virtual Metering: 24 building-level thermal points');
+    addText('• Measurement Coverage: 98.4%');
+    
+    addText('Model Calibration:', 12, 'bold');
+    addText('• CVRMSE: 26% (Hourly data - meets ASHRAE Guideline 14)');
+    addText('• NMBE: 9% (Hourly data - meets ASHRAE Guideline 14)');
+    addText('• ✓ ASHRAE Guideline 14 Compliant');
+    
+    addText('Baseline Assumptions:', 12, 'bold');
+    addText('• ASHP System: HSPF 9, SEER 15 (standard efficiency)');
+    addText('• GSHP Model: WaterFurnace 5 Series 500A11');
+    addText('• Weather-adjusted performance based on outdoor temperature');
+    addText('• Grid emissions: ISO-NE hourly marginal emissions data');
+    
+    addSeparator();
+    
+    addText('SYSTEM OVERVIEW', 14, 'bold');
+    addText('Network Configuration:');
+    addText('• Total Heating Capacity: 440 kW');
+    addText('• Buildings Served: 35');
+    addText('• Distribution Efficiency: 96.1%');
+    addText('• Borefield Configuration: 3 geothermal heat exchangers');
+    
+    addSeparator();
+    
+    addText('KEY INSIGHTS & CONCLUSIONS', 14, 'bold');
+    addText('The Framingham Thermal Energy Network demonstrates superior performance across all metrics:');
+    addText('• Energy efficiency gains through geothermal technology');
+    addText('• Significant cost reductions via centralized O&M');
+    addText('• Substantial carbon emissions reduction');
+    addText('• High system reliability (>99% uptime)');
+    addText('• Validated measurement and verification protocols');
+
+    // Footer on each page
+    const addFooter = (pageNum) => {
+      const footerY = pageHeight - 25;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(128, 128, 128);
+      
+      // Left side - generation info
+      doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, margin, footerY);
+      doc.text('Generated by: Jouler | Thermal Network Intelligence Platform', margin, footerY + 8);
+      
+      // Right side - page number and certification
+      doc.text(`Page ${pageNum}`, pageWidth - margin - 30, footerY);
+      const certText = doc.splitTextToSize('Certification: IPMVP Option D Compliant | ASHRAE Guideline 14 Verified', contentWidth);
+      doc.text(certText, margin, footerY + 16);
+      
+      doc.setTextColor(0, 0, 0);
+    };
+    
+    // Add footer to all pages
+    for (let i = 1; i <= pageCount; i++) {
+      if (i > 1) doc.setPage(i);
+      addFooter(i);
+    }
+
+    // Save the PDF
+    const filename = `${data.title.replace(/\s+/g, '_')}_${data.period.replace(/\s+/g, '_')}.pdf`;
+    doc.save(filename);
+
+    // Show confirmation
+    alert(`${data.title} generated successfully as PDF!`);
+  };
+
+  // Energy Consumption Line Chart Component
+  const EnergyConsumptionChart = ({ data }) => {
+    const svgRef = useRef();
+
+    useEffect(() => {
+      if (!data || data.length === 0) return;
+
+      const svg = d3.select(svgRef.current);
+      svg.selectAll('*').remove();
+
+      const margin = { top: 30, right: 100, bottom: 60, left: 100 };
+      const width = 1000 - margin.left - margin.right;
+      const height = 400 - margin.top - margin.bottom;
+
+      const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+      // Process hourly consumption data for stacked area chart
+      const processedData = data.map((d, i) => {
+        const geoTotal = (d.geoTotal || 0) / 1000; // Convert to kW
+        const airTotal = (d.airTotal || 0) / 1000;
+        const excessAir = Math.max(0, airTotal - geoTotal); // Excess ASHP energy over TEN
+        return {
+          hour: i + 1,
+          geoTotal,
+          airTotal,
+          excessAir,
+          savings: airTotal - geoTotal
+        };
+      });
+
+      // Scales
+      const xScale = d3.scaleLinear()
+        .domain([1, data.length])
+        .range([0, width]);
+
+      const yScale = d3.scaleLinear()
+        .domain([0, d3.max(processedData, d => d.airTotal)])
+        .range([height, 0]);
+
+      // Area generators for stacked chart
+      const tenArea = d3.area()
+        .x(d => xScale(d.hour))
+        .y0(height) // Bottom of chart
+        .y1(d => yScale(d.geoTotal))
+        .curve(d3.curveMonotoneX);
+
+      const excessArea = d3.area()
+        .x(d => xScale(d.hour))
+        .y0(d => yScale(d.geoTotal)) // Top of TEN area
+        .y1(d => yScale(d.airTotal)) // Top of total ASHP
+        .curve(d3.curveMonotoneX);
+
+      // Add axes
+      g.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(xScale).tickFormat(d => d));
+
+      g.append('g')
+        .call(d3.axisLeft(yScale).tickFormat(d => `${d.toLocaleString()} kW`));
+
+      // Add stacked areas
+      // TEN area (bottom layer - green)
+      g.append('path')
+        .datum(processedData)
+        .attr('fill', '#22c55e')
+        .attr('fill-opacity', 0.8)
+        .attr('stroke', '#16a34a')
+        .attr('stroke-width', 1)
+        .attr('d', tenArea);
+
+      // Excess ASHP area (top layer - red)
+      g.append('path')
+        .datum(processedData)
+        .attr('fill', '#ef4444')
+        .attr('fill-opacity', 0.7)
+        .attr('stroke', '#dc2626')
+        .attr('stroke-width', 1)
+        .attr('d', excessArea);
+
+      // Add legend
+      const legend = g.append('g')
+        .attr('transform', `translate(${width - 120}, 20)`);
+
+      legend.append('rect')
+        .attr('x', 0).attr('y', 0)
+        .attr('width', 15).attr('height', 15)
+        .attr('fill', '#22c55e')
+        .attr('fill-opacity', 0.8);
+      
+      legend.append('text')
+        .attr('x', 20).attr('y', 12)
+        .text('TEN Consumption')
+        .style('font-size', '12px');
+
+      legend.append('rect')
+        .attr('x', 0).attr('y', 20)
+        .attr('width', 15).attr('height', 15)
+        .attr('fill', '#ef4444')
+        .attr('fill-opacity', 0.7);
+      
+      legend.append('text')
+        .attr('x', 20).attr('y', 32)
+        .text('ASHP Excess')
+        .style('font-size', '12px');
+
+      // Add axis labels
+      g.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', 0 - margin.left)
+        .attr('x', 0 - (height / 2))
+        .attr('dy', '1em')
+        .style('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .text('Energy Consumption (kWh)');
+
+      g.append('text')
+        .attr('transform', `translate(${width / 2}, ${height + margin.bottom})`)
+        .style('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .text('Hour of Year');
+
+    }, [data]);
+
+    return <svg ref={svgRef} width={1000} height={460} className="mx-auto"></svg>;
+  };
+
+  // Monthly Demand Bar Chart Component
+  const MonthlyDemandChart = ({ monthlyData }) => {
+    const svgRef = useRef();
+
+    useEffect(() => {
+      if (!monthlyData || monthlyData.length === 0) return;
+
+      const svg = d3.select(svgRef.current);
+      svg.selectAll('*').remove();
+
+      const margin = { top: 30, right: 100, bottom: 60, left: 100 };
+      const width = 1000 - margin.left - margin.right;
+      const height = 350 - margin.top - margin.bottom;
+
+      const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      // Scales
+      const xScale = d3.scaleBand()
+        .domain(monthlyData.map(d => monthNames[d.month - 1]))
+        .range([0, width])
+        .padding(0.2);
+
+      const yScale = d3.scaleLinear()
+        .domain([0, d3.max(monthlyData, d => Math.max(d.geoMax, d.airMax))])
+        .range([height, 0]);
+
+      // Add axes
+      g.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(xScale));
+
+      g.append('g')
+        .call(d3.axisLeft(yScale).tickFormat(d => `${d.toFixed(0)} kW`));
+
+      // Add bars
+      const barWidth = xScale.bandwidth() / 2;
+
+      // TEN bars
+      g.selectAll('.geo-bar')
+        .data(monthlyData)
+        .enter().append('rect')
+        .attr('class', 'geo-bar')
+        .attr('x', d => xScale(monthNames[d.month - 1]))
+        .attr('y', d => yScale(d.geoMax))
+        .attr('width', barWidth)
+        .attr('height', d => height - yScale(d.geoMax))
+        .attr('fill', '#22c55e');
+
+      // ASHP bars
+      g.selectAll('.air-bar')
+        .data(monthlyData)
+        .enter().append('rect')
+        .attr('class', 'air-bar')
+        .attr('x', d => xScale(monthNames[d.month - 1]) + barWidth)
+        .attr('y', d => yScale(d.airMax))
+        .attr('width', barWidth)
+        .attr('height', d => height - yScale(d.airMax))
+        .attr('fill', '#ef4444');
+
+      // Add legend
+      const legend = g.append('g')
+        .attr('transform', `translate(${width - 100}, 20)`);
+
+      legend.append('rect')
+        .attr('x', 0).attr('y', 0)
+        .attr('width', 15).attr('height', 15)
+        .attr('fill', '#22c55e');
+      
+      legend.append('text')
+        .attr('x', 20).attr('y', 12)
+        .text('TEN')
+        .style('font-size', '12px');
+
+      legend.append('rect')
+        .attr('x', 0).attr('y', 20)
+        .attr('width', 15).attr('height', 15)
+        .attr('fill', '#ef4444');
+      
+      legend.append('text')
+        .attr('x', 20).attr('y', 32)
+        .text('ASHP')
+        .style('font-size', '12px');
+
+      // Add axis labels
+      g.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', 0 - margin.left)
+        .attr('x', 0 - (height / 2))
+        .attr('dy', '1em')
+        .style('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .text('Peak Monthly Demand (kW)');
+
+      g.append('text')
+        .attr('transform', `translate(${width / 2}, ${height + margin.bottom})`)
+        .style('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .text('Month');
+
+    }, [monthlyData]);
+
+    return <svg ref={svgRef} width={1000} height={410} className="mx-auto"></svg>;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -148,21 +833,21 @@ function App() {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Thermal Network Management Platform
+                Jouler - The TEN Intelligence Platform
               </h1>
               <p className="text-gray-600 mt-1">
-                Framingham Thermal Network - Live Performance Analysis
+                Real-Time M&V Platform for Thermal Networks
               </p>
             </div>
             
             {/* Hour Control */}
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">January Hour:</label>
+                <label className="text-sm font-medium text-gray-700">Hour of Year:</label>
                 <input
                   type="range"
                   min="1"
-                  max="744"
+                  max="8760"
                   value={currentHour}
                   onChange={(e) => handleHourChange(e.target.value)}
                   className="w-32"
@@ -194,13 +879,13 @@ function App() {
             />
             <TabButton 
               tabId="efficiency" 
-              label="Optimization" 
+              label="Performance Validation" 
               isActive={activeTab === 'efficiency'} 
               onClick={setActiveTab} 
             />
             <TabButton 
               tabId="assets" 
-              label="Asset Valuation" 
+              label="Reporting" 
               isActive={activeTab === 'assets'} 
               onClick={setActiveTab} 
             />
@@ -216,39 +901,34 @@ function App() {
             {currentData && (
               <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                 <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                  <div className="text-sm text-gray-600 uppercase tracking-wide">Heating Load</div>
+                  <div className="text-sm text-gray-600 uppercase tracking-wide">Total Heating Load</div>
                   <div className="text-2xl font-bold text-red-600 mt-2">
                     {((Math.abs(currentData.systemMetrics?.heatingLoad || 0)) / 1000).toFixed(0)} kW
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Buildings in Heating Mode</div>
                 </div>
                 <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                  <div className="text-sm text-gray-600 uppercase tracking-wide">Cooling Load</div>
+                  <div className="text-sm text-gray-600 uppercase tracking-wide">Total Cooling Load</div>
                   <div className="text-2xl font-bold text-blue-600 mt-2">
                     {((currentData.systemMetrics?.coolingLoad || 0) / 1000).toFixed(0)} kW
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Buildings in Cooling Mode</div>
                 </div>
                 <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                  <div className="text-sm text-gray-600 uppercase tracking-wide">System COP</div>
+                  <div className="text-sm text-gray-600 uppercase tracking-wide">TEN Average COP</div>
                   <div className="text-2xl font-bold text-green-600 mt-2">
                     {currentData.systemMetrics?.avgGeoCOP?.toFixed(2) || 'N/A'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Thermal Network</div>
                 </div>
                 <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                  <div className="text-sm text-gray-600 uppercase tracking-wide">vs Heat Pumps</div>
+                  <div className="text-sm text-gray-600 uppercase tracking-wide">ASHP COP</div>
                   <div className="text-2xl font-bold text-red-600 mt-2">
                     {currentData.systemMetrics?.avgAirCOP?.toFixed(2) || 'N/A'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Individual COP</div>
                 </div>
                 <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
                   <div className="text-sm text-gray-600 uppercase tracking-wide">Efficiency Gain</div>
                   <div className="text-2xl font-bold text-blue-600 mt-2">
                     {currentData.systemMetrics?.systemEfficiencyGain?.toFixed(1) || 'N/A'}%
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">TEN Advantage</div>
                 </div>
               </div>
             )}
@@ -257,6 +937,7 @@ function App() {
             <div>
               <NetworkVisualization
                 data={currentData?.buildings}
+                systemData={currentData?.systemData}
                 onNodeSelect={handleNodeSelect}
                 selectedNode={selectedNode}
                 currentHour={currentHour}
@@ -290,30 +971,6 @@ function App() {
                   else if (selectedNode === 'b_5') { buildingType = 'HOUSING DEPARTMENT'; connectedBorefield = 'Borefield 3'; }
                   else if (parseInt(buildingNum) >= 16) { connectedBorefield = 'Borefield 1'; }
                   
-                  const geoRating = geoEfficiency >= 4.5 ? '✓ (excellent)' : 
-                                  geoEfficiency >= 3.5 ? '✓ (good)' : 
-                                  geoEfficiency >= 2.5 ? '(fair)' : '(poor)';
-                  
-                  // Calculate flex potential based on current load vs max demand
-                  const currentLoad = Math.abs(building.load || 0);
-                  // Estimate max demand based on building type and typical loads
-                  let maxDemand = 15000; // Default 15kW for residential
-                  if (buildingType === 'FIRE DEPARTMENT') maxDemand = 50000;
-                  else if (buildingType === 'GULF STATION') maxDemand = 30000;
-                  else if (buildingType === 'CORNER CABINET') maxDemand = 20000;
-                  else if (buildingType === 'PUBLIC SCHOOL') maxDemand = 80000;
-                  else if (buildingType === 'HOUSING DEPARTMENT') maxDemand = 40000;
-                  
-                  const loadRatio = currentLoad / maxDemand;
-                  const flexPotential = loadRatio <= 0.33 ? 'Low' : 
-                                       loadRatio <= 0.67 ? 'Medium' : 'High';
-                  
-                  // Determine DR enrollment status - R1 (b_6), R10 (b_15), R31 (b_36) are enrolled
-                  const isEnrolledInDR = selectedNode === 'b_6' || selectedNode === 'b_15' || selectedNode === 'b_36';
-                  
-                  // Calculate DR value: current heating load * 0.1 * $5
-                  const heatingLoad = isHeating ? Math.abs(building.load || 0) : 0;
-                  const drValue = (heatingLoad / 1000) * 0.1 * 5; // Convert to kW, then apply formula
 
                   return (
                     <div className="space-y-6">
@@ -324,16 +981,16 @@ function App() {
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Observable (Customer Control) */}
+                        {/* Metering */}
                         <div>
                           <h5 className="text-lg font-semibold text-gray-800 mb-3">
-                            Observable (Customer Control):
+                            Metering:
                           </h5>
                           <div className="space-y-2 ml-4">
                             <div className="flex items-start">
                               <span className="text-gray-600 mr-2">├─</span>
                               <span className="text-gray-700">
-                                <strong>Inlet Temp:</strong> {building.inletTemp.fahrenheit?.toFixed(1) || 'N/A'}°F
+                                <strong>Inlet Temp:</strong> {building.inletTemp.fahrenheit?.toFixed(1) || 'N/A'}°F - {['b_1', 'b_3', 'b_4', 'b_15', 'b_16', 'b_36'].includes(selectedNode) ? '(physical)' : '(virtual)'}
                               </span>
                             </div>
                             <div className="flex items-start">
@@ -351,12 +1008,18 @@ function App() {
                           </div>
                         </div>
 
-                        {/* Network Optimization */}
+                        {/* Real Time Performance */}
                         <div>
                           <h5 className="text-lg font-semibold text-gray-800 mb-3">
-                            Network Optimization:
+                            Real Time Performance:
                           </h5>
                           <div className="space-y-2 ml-4">
+                            <div className="flex items-start">
+                              <span className="text-gray-600 mr-2">├─</span>
+                              <span className="text-gray-700">
+                                <strong>Load:</strong> {Math.abs(building.load / 1000).toFixed(1)} kW ({mode})
+                              </span>
+                            </div>
                             <div className="flex items-start">
                               <span className="text-gray-600 mr-2">├─</span>
                               <span className="text-gray-700">
@@ -370,44 +1033,15 @@ function App() {
                               </span>
                             </div>
                             <div className="flex items-start">
-                              <span className="text-gray-600 mr-2">├─</span>
-                              <span className="text-gray-700">
-                                <strong>Connected to:</strong> {connectedBorefield}
-                              </span>
-                            </div>
-                            <div className="flex items-start">
-                              <span className="text-gray-600 mr-2">├─</span>
-                              <span className="text-gray-700">
-                                <strong>Flex Potential:</strong> {flexPotential}
-                              </span>
-                            </div>
-                            <div className="flex items-start">
                               <span className="text-gray-600 mr-2">└─</span>
                               <span className="text-gray-700">
-                                <strong>DR Eligible:</strong> {isEnrolledInDR ? 'Enrolled' : 'Not enrolled'}
+                                <strong>Connected to:</strong> {connectedBorefield}
                               </span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* DR Value */}
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <div className="flex items-start">
-                          <span className="text-blue-600 mr-2 text-lg">💡</span>
-                          <span className="text-blue-800">
-                            {isEnrolledInDR ? (
-                              <span>
-                                <strong>Current DR value:</strong> ${drValue.toFixed(2)}/month
-                              </span>
-                            ) : (
-                              <span>
-                                <strong>If enrolled in demand response:</strong> ${drValue.toFixed(2)}/month potential
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      </div>
                     </div>
                   );
                 })()}
@@ -417,35 +1051,37 @@ function App() {
                   const metrics = calculateBorefieldMetrics(selectedNode);
                   if (!metrics) return null;
                   
+                  // Get borefield heat from system data
+                  let borefieldHeatKW = 0;
+                  if (currentData?.systemData) {
+                    if (selectedNode === 'borefield_1') borefieldHeatKW = (currentData.systemData.borefield1HeatW || 0) / 1000;
+                    else if (selectedNode === 'borefield_2') borefieldHeatKW = (currentData.systemData.borefield2HeatW || 0) / 1000;
+                    else if (selectedNode === 'borefield_3') borefieldHeatKW = (currentData.systemData.borefield3HeatW || 0) / 1000;
+                  }
+                  
+                  const borefieldStatus = borefieldHeatKW > 0 ? 'Heating' : borefieldHeatKW < 0 ? 'Cooling' : 'Standby';
+                  
                   const stats = [
                     { 
                       label: 'Current Load (kW)', 
-                      value: metrics.currentLoadKW.toFixed(1)
+                      value: Math.abs(borefieldHeatKW).toFixed(1)
                     },
                     { 
-                      label: 'Capacity %', 
-                      value: metrics.capacityPercent.toFixed(1) + '%'
-                    },
-                    { 
-                      label: 'Available Capacity (kW)', 
-                      value: (440 - Math.abs(metrics.currentLoadKW)).toFixed(1)
+                      label: 'Ground Temp (°F)', 
+                      value: '55.0'
                     },
                     { 
                       label: 'Buildings Served', 
                       value: metrics.buildingsCount.toString()
                     },
                     { 
-                      label: 'Rated Capacity (kW)', 
-                      value: '440.0'
-                    },
-                    { 
-                      label: 'Ground Temp (°F)', 
-                      value: '55.0'
+                      label: 'Status', 
+                      value: borefieldStatus
                     }
                   ];
                   
                   return (
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {stats.map((stat, index) => (
                         <div key={index} className="text-center">
                           <div className="text-sm text-gray-600 font-medium">
@@ -459,6 +1095,30 @@ function App() {
                     </div>
                   );
                 })()}
+
+                {/* Pump Details */}
+                {selectedNode === 'pump' && currentData?.systemData && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 font-medium">Mass Flow Rate</div>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">
+                        {currentData.systemData.massFlowKgs?.toFixed(2) || 'N/A'} kg/s
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 font-medium">Status</div>
+                      <div className="text-lg font-semibold text-green-600 mt-1">Active</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 font-medium">Type</div>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">Variable Speed</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 font-medium">Control Mode</div>
+                      <div className="text-lg font-semibold text-gray-900 mt-1">Flow Control</div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -467,419 +1127,431 @@ function App() {
         {activeTab === 'efficiency' && (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Optimization Opportunities</h2>
-              <p className="text-gray-600">Identify and capture additional value from the thermal network</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Performance Validation</h2>
+              <p className="text-gray-600">Quantitative analysis of thermal network efficiency gains and economic benefits</p>
             </div>
 
-            {/* DR Optimization */}
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-              <div className="flex items-center mb-4">
-                <span className="text-2xl mr-3">💡</span>
-                <h3 className="text-xl font-semibold text-gray-900">Demand Response and Load Shifting</h3>
-              </div>
-              
-              {(() => {
-                if (!currentData?.buildings) return null;
-                
-                // Calculate current DR value from enrolled customers (R1, R10, R31)
-                const enrolledBuildings = ['b_6', 'b_15', 'b_36'];
-                const currentDRValue = enrolledBuildings.reduce((sum, buildingId) => {
-                  const building = currentData.buildings[buildingId];
-                  if (building && building.load < 0) { // Only heating loads
-                    const heatingLoad = Math.abs(building.load) / 1000; // Convert to kW
-                    return sum + (heatingLoad * 0.1 * 5);
-                  }
-                  return sum;
-                }, 0);
+            {(() => {
+              const annualSavings = calculateAnnualSavings();
+              const monthlyDemand = calculateMonthlyDemand();
+              const capacityComparison = calculateCapacityComparison();
+              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-                // Calculate potential DR value if all buildings enrolled
-                const allBuildings = Object.keys(currentData.buildings);
-                const totalPotentialDRValue = allBuildings.reduce((sum, buildingId) => {
-                  const building = currentData.buildings[buildingId];
-                  if (building && building.load < 0) { // Only heating loads
-                    const heatingLoad = Math.abs(building.load) / 1000; // Convert to kW
-                    return sum + (heatingLoad * 0.1 * 5);
-                  }
-                  return sum;
-                }, 0);
-
-                const additionalValue = totalPotentialDRValue - currentDRValue;
-                const enrolledCount = enrolledBuildings.length;
-                const totalBuildings = allBuildings.length;
-
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center bg-green-50 rounded-lg p-4 border border-green-200">
-                      <div className="text-sm text-green-600 font-medium uppercase tracking-wide">
-                        Current DR Value
+              return (
+                <>
+                  {/* Annual Energy Consumption Comparison */}
+                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                    <div className="flex items-center mb-6">
+                      <span className="text-2xl mr-3">📊</span>
+                      <h3 className="text-xl font-semibold text-gray-900">Annual Energy Consumption</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                      <div className="text-center bg-green-50 rounded-lg p-4 border border-green-200">
+                        <div className="text-sm text-green-600 font-medium uppercase tracking-wide">
+                          Annual Energy Savings
+                        </div>
+                        <div className="text-3xl font-bold text-green-900 mt-2">
+                          {annualSavings.savings.toFixed(0)} kWh
+                        </div>
+                        <div className="text-xs text-green-600 mt-1">
+                          TEN vs ASHP systems
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold text-green-900 mt-2">
-                        ${currentDRValue.toFixed(2)}
+                      
+                      <div className="text-center bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <div className="text-sm text-blue-600 font-medium uppercase tracking-wide">
+                          Economic Value
+                        </div>
+                        <div className="text-3xl font-bold text-blue-900 mt-2">
+                          ${annualSavings.economicValue.toFixed(0)}
+                        </div>
+                        <div className="text-xs text-blue-600 mt-1">
+                          Annual savings at $0.15/kWh
+                        </div>
                       </div>
-                      <div className="text-xs text-green-600 mt-1">
-                        {enrolledCount} customers enrolled
+                      
+                      <div className="text-center bg-purple-50 rounded-lg p-4 border border-purple-200">
+                        <div className="text-sm text-purple-600 font-medium uppercase tracking-wide">
+                          Efficiency Gain
+                        </div>
+                        <div className="text-3xl font-bold text-purple-900 mt-2">
+                          {timeSeriesData.length > 0 ? ((annualSavings.savings / timeSeriesData.reduce((sum, h) => sum + (h.airTotal || 0), 0) * 1000) * 100).toFixed(1) : 0}%
+                        </div>
+                        <div className="text-xs text-purple-600 mt-1">
+                          Energy reduction vs individual heat pumps
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="text-center bg-blue-50 rounded-lg p-4 border border-blue-200">
-                      <div className="text-sm text-blue-600 font-medium uppercase tracking-wide">
-                        Full Potential
-                      </div>
-                      <div className="text-3xl font-bold text-blue-900 mt-2">
-                        ${totalPotentialDRValue.toFixed(2)}
-                      </div>
-                      <div className="text-xs text-blue-600 mt-1">
-                        If all {totalBuildings} customers enrolled
-                      </div>
-                    </div>
-
-                    <div className="text-center bg-orange-50 rounded-lg p-4 border border-orange-200">
-                      <div className="text-sm text-orange-600 font-medium uppercase tracking-wide">
-                        Additional Opportunity
-                      </div>
-                      <div className="text-3xl font-bold text-orange-900 mt-2">
-                        ${additionalValue.toFixed(2)}
-                      </div>
-                      <div className="text-xs text-orange-600 mt-1">
-                        Monthly revenue potential
-                      </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <EnergyConsumptionChart data={timeSeriesData} />
                     </div>
                   </div>
-                );
-              })()}
-              
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-700">
-                  <strong>Opportunity:</strong> Expand demand response enrollment to capture additional revenue from customer flexibility. 
-                  Current enrollment rate: {currentData?.buildings ? Math.round((3 / Object.keys(currentData.buildings).length) * 100) : 0}% of network customers.
-                </p>
-              </div>
-            </div>
 
-            {/* Pumping Optimization */}
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-              <div className="flex items-center mb-4">
-                <span className="text-2xl mr-3">⚡</span>
-                <h3 className="text-xl font-semibold text-gray-900">Pumping Optimization</h3>
-              </div>
-              
-              {(() => {
-                if (!currentData?.buildings) return null;
-                
-                // Check if we have both heating and cooling loads
-                const buildings = Object.values(currentData.buildings);
-                const heatingBuildings = buildings.filter(b => b.load < 0);
-                const coolingBuildings = buildings.filter(b => b.load > 0);
-                
-                const hasOptimizationOpportunity = heatingBuildings.length > 0 && coolingBuildings.length > 0;
-                
-                const totalHeatingLoad = heatingBuildings.reduce((sum, b) => sum + Math.abs(b.load), 0) / 1000; // kW
-                const totalCoolingLoad = coolingBuildings.reduce((sum, b) => sum + b.load, 0) / 1000; // kW
-                
-                // Estimate pumping energy savings (simplified calculation)
-                const balancedLoad = Math.min(totalHeatingLoad, totalCoolingLoad);
-                const pumpingEfficiency = 0.85; // Typical pump efficiency
-                const estimatedSavings = balancedLoad * (1 - pumpingEfficiency) * 0.5; // Rough estimate
-
-                return (
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                      <div className="text-center bg-red-50 rounded-lg p-3 border border-red-200">
-                        <div className="text-sm text-red-600 font-medium">Heating Load</div>
-                        <div className="text-2xl font-bold text-red-900">{totalHeatingLoad.toFixed(1)} kW</div>
-                        <div className="text-xs text-red-600">{heatingBuildings.length} buildings</div>
+                  {/* Monthly Demand Comparison */}
+                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                    <div className="flex items-center mb-6">
+                      <span className="text-2xl mr-3">📈</span>
+                      <h3 className="text-xl font-semibold text-gray-900">Monthly Peak Demand</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                      <div className="text-center bg-orange-50 rounded-lg p-4 border border-orange-200">
+                        <div className="text-sm text-orange-600 font-medium uppercase tracking-wide">
+                          Total Demand Reduction
+                        </div>
+                        <div className="text-3xl font-bold text-orange-900 mt-2">
+                          {monthlyDemand.monthlyData.reduce((sum, m) => sum + m.difference, 0).toFixed(1)} kW
+                        </div>
+                        <div className="text-xs text-orange-600 mt-1">
+                          Sum of monthly peak differences
+                        </div>
                       </div>
                       
-                      <div className="text-center bg-blue-50 rounded-lg p-3 border border-blue-200">
-                        <div className="text-sm text-blue-600 font-medium">Cooling Load</div>
-                        <div className="text-2xl font-bold text-blue-900">{totalCoolingLoad.toFixed(1)} kW</div>
-                        <div className="text-xs text-blue-600">{coolingBuildings.length} buildings</div>
+                      <div className="text-center bg-red-50 rounded-lg p-4 border border-red-200">
+                        <div className="text-sm text-red-600 font-medium uppercase tracking-wide">
+                          Economic Value
+                        </div>
+                        <div className="text-3xl font-bold text-red-900 mt-2">
+                          ${monthlyDemand.economicValue.toFixed(0)}
+                        </div>
+                        <div className="text-xs text-red-600 mt-1">
+                          Annual savings at $15/kW
+                        </div>
                       </div>
                       
-                      <div className="text-center bg-green-50 rounded-lg p-3 border border-green-200">
-                        <div className="text-sm text-green-600 font-medium">Balanced Load</div>
-                        <div className="text-2xl font-bold text-green-900">{balancedLoad.toFixed(1)} kW</div>
-                        <div className="text-xs text-green-600">Internal exchange</div>
-                      </div>
-                      
-                      <div className="text-center bg-purple-50 rounded-lg p-3 border border-purple-200">
-                        <div className="text-sm text-purple-600 font-medium">Pump Savings</div>
-                        <div className="text-2xl font-bold text-purple-900">{estimatedSavings.toFixed(1)} kW</div>
-                        <div className="text-xs text-purple-600">Estimated reduction</div>
+                      <div className="text-center bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="text-sm text-gray-600 font-medium uppercase tracking-wide">
+                          Average Monthly Reduction
+                        </div>
+                        <div className="text-3xl font-bold text-gray-900 mt-2">
+                          {(monthlyDemand.monthlyData.reduce((sum, m) => sum + m.difference, 0) / 12).toFixed(1)} kW
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          Per month peak demand savings
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      {hasOptimizationOpportunity ? (
-                        <p className="text-sm text-gray-700">
-                          <strong>Opportunity Available:</strong> Network has both heating and cooling loads, enabling internal heat exchange. 
-                          Reduced central pumping can save approximately {estimatedSavings.toFixed(1)} kW with no efficiency loss 
-                          by optimizing flow control to maximize building-to-building heat transfer.
-                        </p>
-                      ) : (
-                        <p className="text-sm text-gray-700">
-                          <strong>Current Status:</strong> All buildings in {heatingBuildings.length > 0 ? 'heating' : 'cooling'} mode. 
-                          Pumping optimization opportunities will emerge when buildings have mixed heating/cooling demands.
-                        </p>
-                      )}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <MonthlyDemandChart monthlyData={monthlyDemand.monthlyData} />
                     </div>
                   </div>
-                );
-              })()}
-            </div>
 
-            {/* New Asset Integration */}
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-              <div className="flex items-center mb-4">
-                <span className="text-2xl mr-3">🏢</span>
-                <h3 className="text-xl font-semibold text-gray-900">New Asset Integration</h3>
-              </div>
-              
-              {(() => {
-                if (!currentData?.buildings) return null;
-                
-                // Get Borefield 2 metrics for reference load
-                const bf2Metrics = calculateBorefieldMetrics('borefield_2');
-                if (!bf2Metrics) return null;
-                
-                const dataCenterLoad = 500; // 500 kW data center
-                const currentEfficiencyGain = currentData?.systemMetrics?.systemEfficiencyGain || 0;
-                const newEfficiencyGain = currentEfficiencyGain + 3; // 3% increase
-                
-                // Calculate delta value between old and new efficiency
-                const bf2Load = Math.abs(bf2Metrics.currentLoadKW);
-                const oldSavingsKWElec = bf2Load * (currentEfficiencyGain / 100);
-                const newSavingsKWElec = bf2Load * (newEfficiencyGain / 100);
-                const deltaSavingsKWElec = newSavingsKWElec - oldSavingsKWElec;
-                const deltaEnergyCost = deltaSavingsKWElec * 15;
-                const deltaCapacityCost = deltaSavingsKWElec * 250;
-                const totalValue = deltaEnergyCost + deltaCapacityCost;
-
-                return (
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                      <div className="text-center bg-blue-50 rounded-lg p-3 border border-blue-200">
-                        <div className="text-sm text-blue-600 font-medium">Data Center Load</div>
-                        <div className="text-2xl font-bold text-blue-900">{dataCenterLoad} kW</div>
-                        <div className="text-xs text-blue-600">Heat source</div>
-                      </div>
-                      
-                      <div className="text-center bg-green-50 rounded-lg p-3 border border-green-200">
-                        <div className="text-sm text-green-600 font-medium">Efficiency Boost</div>
-                        <div className="text-2xl font-bold text-green-900">+3.0%</div>
-                        <div className="text-xs text-green-600">Network improvement</div>
-                      </div>
-                      
-                      <div className="text-center bg-purple-50 rounded-lg p-3 border border-purple-200">
-                        <div className="text-sm text-purple-600 font-medium">New Total Efficiency</div>
-                        <div className="text-2xl font-bold text-purple-900">{newEfficiencyGain.toFixed(1)}%</div>
-                        <div className="text-xs text-purple-600">vs current {currentEfficiencyGain.toFixed(1)}%</div>
-                      </div>
-                      
-                      <div className="text-center bg-orange-50 rounded-lg p-3 border border-orange-200">
-                        <div className="text-sm text-orange-600 font-medium">Additional Asset Value</div>
-                        <div className="text-2xl font-bold text-orange-900">${totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
-                        <div className="text-xs text-orange-600">From efficiency gain</div>
-                      </div>
+                  {/* Annual Capacity Comparison */}
+                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                    <div className="flex items-center mb-6">
+                      <span className="text-2xl mr-3">⚡</span>
+                      <h3 className="text-xl font-semibold text-gray-900">Peak Capacity Requirements</h3>
                     </div>
                     
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-700">
-                        <strong>Integration Opportunity:</strong> Adding a 500 kW data center heat load would increase network 
-                        efficiency by 3%, improving overall system performance. The waste heat from data center operations 
-                        provides additional thermal energy to the network, reducing reliance on geothermal capacity and 
-                        improving coefficient of performance across all connected buildings.
-                      </p>
-                      <div className="mt-2 text-xs text-gray-600">
-                        Value calculation based on Borefield 2 loading pattern: {bf2Load.toFixed(1)} kW × {newEfficiencyGain.toFixed(1)}% efficiency
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div className="text-center bg-green-50 rounded-lg p-4 border border-green-200">
+                        <div className="text-sm text-green-600 font-medium uppercase tracking-wide">
+                          TEN Peak Load
+                        </div>
+                        <div className="text-3xl font-bold text-green-900 mt-2">
+                          {capacityComparison.geoMax.toFixed(1)} kW
+                        </div>
+                        <div className="text-xs text-green-600 mt-1">
+                          Hour {capacityComparison.geoHour} of year
+                        </div>
+                      </div>
+                      
+                      <div className="text-center bg-red-50 rounded-lg p-4 border border-red-200">
+                        <div className="text-sm text-red-600 font-medium uppercase tracking-wide">
+                          ASHP Peak Load
+                        </div>
+                        <div className="text-3xl font-bold text-red-900 mt-2">
+                          {capacityComparison.airMax.toFixed(1)} kW
+                        </div>
+                        <div className="text-xs text-red-600 mt-1">
+                          Hour {capacityComparison.airHour} of year
+                        </div>
+                      </div>
+                      
+                      <div className="text-center bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <div className="text-sm text-blue-600 font-medium uppercase tracking-wide">
+                          Capacity Reduction
+                        </div>
+                        <div className="text-3xl font-bold text-blue-900 mt-2">
+                          {(capacityComparison.airMax - capacityComparison.geoMax).toFixed(1)} kW
+                        </div>
+                        <div className="text-xs text-blue-600 mt-1">
+                          TEN advantage
+                        </div>
+                      </div>
+                      
+                      <div className="text-center bg-purple-50 rounded-lg p-4 border border-purple-200">
+                        <div className="text-sm text-purple-600 font-medium uppercase tracking-wide">
+                          Economic Value
+                        </div>
+                        <div className="text-3xl font-bold text-purple-900 mt-2">
+                          ${capacityComparison.economicValue.toFixed(0)}
+                        </div>
+                        <div className="text-xs text-purple-600 mt-1">
+                          Annual savings at $200/kW
+                        </div>
                       </div>
                     </div>
                   </div>
-                );
-              })()}
-            </div>
+                </>
+              );
+            })()}
           </div>
         )}
 
         {activeTab === 'assets' && (
           <div className="space-y-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Borefield Capacity Analysis</h2>
-              <p className="text-gray-600">Current utilization and expansion potential for each borefield</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Reporting</h2>
+              <p className="text-gray-600">Generate performance reports and system traceability documentation</p>
+              
+              {/* Demo Disclaimer */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4 mx-auto max-w-4xl">
+                <div className="flex items-center justify-center">
+                  <div className="text-yellow-600 mr-2">⚠️</div>
+                  <div className="text-sm text-yellow-800">
+                    <strong>Demo Disclaimer:</strong> Generated reports are for demonstration purposes only and are not meant to reflect actual platform data. 
+                    This showcases the potential reporting capabilities of the thermal network management platform.
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Borefield Panels */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {['borefield_1', 'borefield_2', 'borefield_3'].map((borefieldId, index) => {
-                const borefieldNames = ['Borefield 1', 'Borefield 2', 'Borefield 3'];
-                const borefieldName = borefieldNames[index];
-                const metrics = calculateBorefieldMetrics(borefieldId);
+            {/* Report Generation Buttons */}
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <div className="flex items-center mb-6">
+                <span className="text-2xl mr-3">📊</span>
+                <h3 className="text-xl font-semibold text-gray-900">Report Generation</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button 
+                  onClick={generateEmissionsReport}
+                  className="flex items-center px-6 py-5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <span className="text-2xl mr-4">🌱</span>
+                  <div className="text-left flex-1">
+                    <div className="font-semibold text-lg">Monthly Carbon Impact Report</div>
+                    <div className="text-sm text-green-100 mt-1">CO₂ reduction analysis with detailed emissions breakdown</div>
+                  </div>
+                </button>
                 
-                if (!metrics) return null;
+                <button 
+                  onClick={generateEnergyReport}
+                  className="flex items-center px-6 py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <span className="text-2xl mr-4">⚡</span>
+                  <div className="text-left flex-1">
+                    <div className="font-semibold text-lg">Monthly Energy Performance Report</div>
+                    <div className="text-sm text-blue-100 mt-1">Consumption, efficiency metrics & system performance</div>
+                  </div>
+                </button>
                 
-                const maxCapacity = 440; // kW
-                const currentLoad = Math.abs(metrics.currentLoadKW);
-                const availableCapacity = maxCapacity - currentLoad;
-                const utilizationPercent = (currentLoad / maxCapacity) * 100;
+                <button 
+                  onClick={generateEconomicReport}
+                  className="flex items-center px-6 py-5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <span className="text-2xl mr-4">💰</span>
+                  <div className="text-left flex-1">
+                    <div className="font-semibold text-lg">Quarterly Economic Performance Report</div>
+                    <div className="text-sm text-purple-100 mt-1">Cost savings, ROI analysis & financial metrics</div>
+                  </div>
+                </button>
                 
-                // Calculate expansion potential capped at 80% of max capacity
-                const maxOperatingCapacity = maxCapacity * 0.8; // 80% of max capacity
-                const availableToMaxOperating = Math.max(0, maxOperatingCapacity - currentLoad);
-                const additionalBuildings = Math.floor(availableToMaxOperating / 20);
-                
-                // Calculate efficiency savings and cost metrics
-                const systemEfficiencyGain = currentData?.systemMetrics?.systemEfficiencyGain || 0;
-                const savingsKWElec = currentLoad * (systemEfficiencyGain / 100);
-                const energyCost = savingsKWElec * 15; // $15 per kW-elec
-                const capacityCost = savingsKWElec * 250; // $250 per kW-elec
-                const totalAssetValue = energyCost + capacityCost;
-                
-                // Calculate total potential asset value at 80% theoretical capacity
-                const theoreticalLoad = maxOperatingCapacity;
-                const potentialSavingsKWElec = theoreticalLoad * (systemEfficiencyGain / 100);
-                const potentialEnergyCost = potentialSavingsKWElec * 15;
-                const potentialCapacityCost = potentialSavingsKWElec * 250;
-                const totalPotentialAssetValue = potentialEnergyCost + potentialCapacityCost;
-                
-                return (
-                  <div key={borefieldId} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6">
-                      <h3 className="text-xl font-bold">{borefieldName}</h3>
-                      <p className="text-green-100 text-sm mt-1">Geothermal Heat Exchanger</p>
+                <button 
+                  onClick={generatePerformanceReport}
+                  className="flex items-center px-6 py-5 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <span className="text-2xl mr-4">📈</span>
+                  <div className="text-left flex-1">
+                    <div className="font-semibold text-lg">Annual Performance Report</div>
+                    <div className="text-sm text-orange-100 mt-1">Comprehensive system analysis & performance validation</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Enhanced Traceability Section */}
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <div className="flex items-center mb-6">
+                <span className="text-2xl mr-3">🔍</span>
+                <h3 className="text-xl font-semibold text-gray-900">Measurement & Verification Traceability</h3>
+              </div>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center">
+                  <span className="text-blue-600 mr-2">ℹ️</span>
+                  <div className="text-sm text-blue-800">
+                    <strong>M&V Framework:</strong> IPMVP Option D (Calibrated Simulation) with ASHRAE Guideline 14 compliance for hourly calibration standards.
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-8">
+                {/* Model Calibration Performance */}
+                <div className="bg-green-50 rounded-lg p-6 border border-green-200">
+                  <h4 className="font-semibold text-green-800 mb-4 flex items-center">
+                    <span className="mr-2">✓</span>
+                    Model Calibration Performance
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-700">26%</div>
+                      <div className="text-sm text-green-600">CVRMSE (≤30% required)</div>
                     </div>
-                    
-                    {/* Capacity Metrics */}
-                    <div className="p-6 space-y-6">
-                      {/* Current vs Max Capacity */}
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-gray-700">Capacity Utilization</span>
-                          <span className="text-sm text-gray-600">{utilizationPercent.toFixed(1)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(100, utilizationPercent)}%` }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                          <span>0 kW</span>
-                          <span>{maxCapacity} kW</span>
-                        </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-700">9%</div>
+                      <div className="text-sm text-green-600">NMBE (≤10% required)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-700">98.4%</div>
+                      <div className="text-sm text-green-600">Measurement Coverage</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Equipment Models */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-red-50 rounded-lg p-6 border border-red-200">
+                    <h4 className="font-semibold text-red-800 mb-4 flex items-center">
+                      <span className="mr-2">🏠</span>
+                      Baseline ASHP Model
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">HSPF Rating:</span>
+                        <span className="font-medium bg-white px-2 py-1 rounded">9</span>
                       </div>
-
-                      {/* Key Metrics Grid */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center bg-blue-50 rounded-lg p-3 border border-blue-200">
-                          <div className="text-sm text-blue-600 font-medium">Current Load</div>
-                          <div className="text-xl font-bold text-blue-900">{currentLoad.toFixed(1)}</div>
-                          <div className="text-xs text-blue-600">kW</div>
-                        </div>
-                        
-                        <div className="text-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                          <div className="text-sm text-gray-600 font-medium">Max Capacity</div>
-                          <div className="text-xl font-bold text-gray-900">{maxCapacity}</div>
-                          <div className="text-xs text-gray-600">kW</div>
-                        </div>
-                        
-                        <div className="text-center bg-green-50 rounded-lg p-3 border border-green-200">
-                          <div className="text-sm text-green-600 font-medium">Available</div>
-                          <div className="text-xl font-bold text-green-900">{availableCapacity.toFixed(1)}</div>
-                          <div className="text-xs text-green-600">kW</div>
-                        </div>
-                        
-                        <div className="text-center bg-orange-50 rounded-lg p-3 border border-orange-200">
-                          <div className="text-sm text-orange-600 font-medium">Buildings Served</div>
-                          <div className="text-xl font-bold text-orange-900">{metrics.buildingsCount}</div>
-                          <div className="text-xs text-orange-600">current</div>
-                        </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">SEER Rating:</span>
+                        <span className="font-medium bg-white px-2 py-1 rounded">15</span>
                       </div>
-
-                      {/* Expansion Potential */}
-                      <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                        <div className="flex items-center mb-2">
-                          <span className="text-yellow-600 mr-2">🏗️</span>
-                          <h4 className="font-semibold text-yellow-800">Expansion Potential</h4>
-                        </div>
-                        <p className="text-sm text-yellow-700">
-                          Can support <strong>{additionalBuildings} additional buildings</strong> at 20 kW each
-                        </p>
-                        <div className="text-xs text-yellow-600 mt-1">
-                          {availableToMaxOperating.toFixed(1)} kW to 80% operating limit ÷ 20 kW per building = {additionalBuildings} buildings
-                        </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Cold Weather COP:</span>
+                        <span className="font-medium bg-white px-2 py-1 rounded">1.6-2.5</span>
                       </div>
-
-                      {/* Asset Value */}
-                      <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                        <div className="flex items-center mb-3">
-                          <span className="text-purple-600 mr-2">💰</span>
-                          <h4 className="font-semibold text-purple-800">Asset Value</h4>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                          <div className="text-center bg-white rounded p-2 border border-purple-200">
-                            <div className="text-xs text-purple-600 font-medium">Efficiency Savings</div>
-                            <div className="text-lg font-bold text-purple-900">{savingsKWElec.toFixed(1)}</div>
-                            <div className="text-xs text-purple-600">kW-elec</div>
-                          </div>
-                          
-                          <div className="text-center bg-white rounded p-2 border border-purple-200">
-                            <div className="text-xs text-purple-600 font-medium">Efficiency Gain</div>
-                            <div className="text-lg font-bold text-purple-900">{systemEfficiencyGain.toFixed(1)}</div>
-                            <div className="text-xs text-purple-600">%</div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-purple-700">Energy Cost:</span>
-                            <span className="font-medium">${energyCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-purple-700">Capacity Cost:</span>
-                            <span className="font-medium">${capacityCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-                          </div>
-                          <div className="flex justify-between border-t border-purple-200 pt-2">
-                            <span className="font-semibold text-purple-800">Total Asset Value:</span>
-                            <span className="font-bold text-purple-900">${totalAssetValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-                          </div>
-                          <div className="flex justify-between border-t border-purple-300 pt-2 mt-2">
-                            <span className="font-semibold text-purple-800">Total Potential Asset Value:</span>
-                            <span className="font-bold text-purple-900">${totalPotentialAssetValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="text-xs text-purple-600 mt-2">
-                          Potential at 80% capacity ({maxOperatingCapacity.toFixed(0)} kW)
-                        </div>
-                      </div>
-
-                      {/* Status Indicator */}
-                      <div className="text-center">
-                        {utilizationPercent < 50 ? (
-                          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-                            Low Utilization - High Expansion Potential
-                          </div>
-                        ) : utilizationPercent < 80 ? (
-                          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
-                            Moderate Utilization - Some Expansion Potential
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <span className="w-2 h-2 bg-red-400 rounded-full mr-2"></span>
-                            High Utilization - Limited Expansion Potential
-                          </div>
-                        )}
+                      <div className="text-xs text-red-600 mt-2">
+                        Standard efficiency with cold weather degradation factors
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                  
+                  <div className="bg-green-50 rounded-lg p-6 border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-4 flex items-center">
+                      <span className="mr-2">🌿</span>
+                      TEN GSHP Model
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="text-gray-700">
+                        <div className="font-medium text-lg">WaterFurnace 5 Series</div>
+                        <div className="text-sm text-gray-600">Model: 500A11</div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Average COP:</span>
+                        <span className="font-medium bg-white px-2 py-1 rounded">4.2</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Peak COP:</span>
+                        <span className="font-medium bg-white px-2 py-1 rounded">5.3</span>
+                      </div>
+                      <div className="text-xs text-green-600 mt-2">
+                        Consistent efficiency across temperature range
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Building Load Modeling */}
+                <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-4 flex items-center">
+                    <span className="mr-2">🏗️</span>
+                    Building Load Modeling
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-gray-700">
+                        <div className="font-medium text-lg">UrbanOpt (EnergyPlus)</div>
+                        <div className="text-sm text-blue-600 mt-1">Simulation Engine</div>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <div className="text-sm text-gray-600">• Physics-based building models</div>
+                        <div className="text-sm text-gray-600">• Weather-normalized performance</div>
+                        <div className="text-sm text-gray-600">• TMY3 data for Boston Logan</div>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-4">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-blue-700">✓ Validated</div>
+                        <div className="text-xs text-blue-600 mt-1">ASHRAE Guideline 14 Compliant</div>
+                        <div className="text-xs text-gray-500 mt-2">Hourly calibration standards met</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Measurement Infrastructure */}
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  <h4 className="font-semibold text-gray-800 mb-4 flex items-center">
+                    <span className="mr-2">📊</span>
+                    Measurement Infrastructure
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <h5 className="font-medium text-gray-700 mb-3">Physical Metering (15 sensors)</h5>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between bg-white p-3 rounded-lg">
+                          <span className="text-sm text-gray-600">BTU meters - Distribution loop</span>
+                          <span className="font-bold text-blue-600">6</span>
+                        </div>
+                        <div className="flex items-center justify-between bg-white p-3 rounded-lg">
+                          <span className="text-sm text-gray-600">Electrical meters - Equipment</span>
+                          <span className="font-bold text-green-600">6</span>
+                        </div>
+                        <div className="flex items-center justify-between bg-white p-3 rounded-lg">
+                          <span className="text-sm text-gray-600">Borefield sensors - Temp/Flow</span>
+                          <span className="font-bold text-orange-600">3</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h5 className="font-medium text-gray-700 mb-3">Virtual Metering (24 points)</h5>
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-600">• Building-level thermal load disaggregation</div>
+                        <div className="text-sm text-gray-600">• ASHP baseline performance calculations</div>
+                        <div className="text-sm text-gray-600">• Component-level energy attribution</div>
+                        <div className="text-sm text-gray-600">• Continuous validation vs physical sensors</div>
+                        <div className="text-xs text-gray-500 mt-2 bg-white p-2 rounded">
+                          Enabled by calibrated digital twin model
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center bg-white p-4 rounded-lg border">
+                      <div className="text-xl font-bold text-gray-800">35,040</div>
+                      <div className="text-xs text-gray-600">Data points/year</div>
+                      <div className="text-xs text-gray-500">(15-minute intervals)</div>
+                    </div>
+                    <div className="text-center bg-white p-4 rounded-lg border">
+                      <div className="text-xl font-bold text-green-600">99.7%</div>
+                      <div className="text-xs text-gray-600">Data quality</div>
+                      <div className="text-xs text-gray-500">(0.3% flagged/interpolated)</div>
+                    </div>
+                    <div className="text-center bg-white p-4 rounded-lg border">
+                      <div className="text-xl font-bold text-blue-600">15 min</div>
+                      <div className="text-xs text-gray-600">Data intervals</div>
+                      <div className="text-xs text-gray-500">(Real-time monitoring)</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>
@@ -888,7 +1560,7 @@ function App() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center text-gray-600 text-sm">
-            Real time management and optimization of a thermal distribution asset
+            Proving thermal network performance with digital twin M&V
           </div>
         </div>
       </footer>

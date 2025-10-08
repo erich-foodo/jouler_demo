@@ -1,0 +1,525 @@
+FRAMINGHAM THERMAL NETWORK
+Annual Performance Report
+Reporting Period: Calendar Year 2024
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXECUTIVE SUMMARY
+
+The Framingham Thermal Energy Network successfully completed its first full year of 
+operation in 2024, delivering 1,847 MWh of thermal energy to 35 buildings while achieving 
+38% energy savings, 56% cost reduction, and 87% carbon emissions reduction compared to 
+individual air-source heat pump systems.
+
+ANNUAL IMPACT SUMMARY
+
+Energy Performance                    Economic Performance
+- Thermal Delivered: 1,847 MWh       • Total Cost Savings: $113,800
+- System Efficiency: 4.2 avg COP     • Energy Cost Savings: $39,544
+- Energy Savings: 268 MWh (38%)      • O&M Cost Savings: $66,384
+- System Uptime: 99.1%               • Incentives Earned: $49,280
+
+Environmental Performance             Operational Performance  
+- Carbon Avoided: 187 tons CO₂       • Buildings Served: 35
+- Emissions Reduction: 87%           • Peak Load Served: 337 kW
+- Renewable Grid Content: 44% avg    • Average Load Factor: 69%
+                                     • Unplanned Downtime: 7.8 hours
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ANNUAL ENERGY PERFORMANCE
+
+System Efficiency Metrics:
+  Total Thermal Energy Delivered: 1,847,340 kWh
+  Total Electrical Energy Input: 439,843 kWh
+  Annual Average COP: 4.2
+  Peak COP Achieved: 5.3 (June 15, mild cooling load)
+  Minimum COP: 3.6 (January 12, design day conditions)
+
+Comparison to ASHP Baseline:
+  TEN Electrical Input: 439,843 kWh
+  ASHP Electrical Equivalent: 707,846 kWh (for same thermal output)
+  Annual Energy Savings: 268,003 kWh (38%)
+  Avoided Peak Demand: 127 kW average (38%)
+
+[VISUAL: Monthly energy comparison chart - TEN vs ASHP electrical consumption]
+
+Seasonal Performance Analysis:
+                Thermal (MWh)    Elec Input (MWh)    COP    Savings vs ASHP
+Winter (DJF)    598              154                 3.9    153 MWh (50%)
+Spring (MAM)    286              65                  4.4    51 MWh (44%)
+Summer (JJA)    129              26                  5.0    7 MWh (21%)
+Fall (SON)      334              75                  4.5    57 MWh (43%)
+──────────────────────────────────────────────────────────────────────────
+Annual Total    1,847            439                 4.2    268 MWh (38%)
+
+Key Findings:
+- Winter heating shows greatest TEN advantage (50% savings) due to ASHP cold 
+  weather degradation
+- Summer cooling shows smallest advantage (21% savings) as both systems perform 
+  well in mild conditions  
+- Shoulder seasons demonstrate consistent 43-44% savings
+- Year-round average COP of 4.2 significantly exceeds ASHP baseline of 2.6
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ECONOMIC PERFORMANCE
+
+Annual Cost Comparison:
+┌─────────────────────────────────────────────────────────────────────┐
+│  Cost Category              TEN          ASHP         Savings       │
+│                                                                       │
+│  Energy Charges            $65,976      $106,177      $40,201 (38%) │
+│  Demand Charges            $13,195      $20,943       $7,748 (37%)  │
+│  Operations & Maintenance  $11,360      $77,744       $66,384 (85%) │
+│  ──────────────────────────────────────────────────────────────────│
+│  Total Annual Cost         $90,531      $204,864      $114,333 (56%)│
+└─────────────────────────────────────────────────────────────────────┘
+
+[VISUAL: Stacked bar chart showing cost breakdown TEN vs ASHP]
+
+Quarterly Economic Trend:
+Quarter    Energy Savings    Demand Savings    O&M Savings    Total Savings
+Q1         $9,842           $1,965            $16,594        $28,401
+Q2         $5,234           $1,047            $16,198        $22,479
+Q3         $7,922           $1,584            $16,996        $26,502
+Q4         $11,854          $2,371            $16,596        $30,821
+────────────────────────────────────────────────────────────────────────
+Annual     $34,852          $6,967            $66,384        $108,203
+
+Additional Economic Value:
+  Utility Incentive Payments: $21,440 (energy efficiency program)
+  Renewable Thermal Credits: $27,840 (RTC program)
+  ──────────────────────────────────────────────────────────────────
+  Total Economic Benefit: $157,483
+
+Cost Per Building Analysis:
+  Average Annual Savings Per Building: $3,250
+  Range: $1,840 - $5,420 (based on building size/usage)
+  Highest Savings: Building 15 ($5,420 - large commercial)
+  Network economies of scale enable lower per-building costs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ENVIRONMENTAL PERFORMANCE
+
+Carbon Emissions Summary:
+  TEN Total Emissions: 24.3 tons CO₂
+  ASHP Baseline Emissions: 211.4 tons CO₂  
+  Carbon Avoided: 187.1 tons CO₂
+  Emissions Reduction: 87%
+
+[VISUAL: Monthly carbon emissions comparison - TEN vs ASHP]
+
+Carbon Reduction Breakdown:
+  Source of Reduction:
+    • System Efficiency (COP 4.2 vs 2.6): 156.8 tons CO₂ (84%)
+    • Grid Renewable Content (44% avg): 30.3 tons CO₂ (16%)
+    • Total Combined Effect: 187.1 tons CO₂
+
+Emissions Equivalent:
+  187 tons CO₂ avoided is equivalent to:
+    • 41 passenger vehicles removed from roads for one year
+    • 463,000 miles not driven by average passenger vehicle
+    • 21,000 gallons of gasoline not consumed
+    • 22 acres of U.S. forests storing carbon for one year
+    • 92 tons of waste recycled instead of landfilled
+
+Grid Carbon Intensity (Annual Average):
+  2024 Average: 382 kg CO₂/MWh (ISO-NE region)
+  Renewable Generation: 44% (wind, solar, hydro, nuclear)
+  Peak Clean Energy Month: May 2024 (58% renewable)
+  Lowest Clean Energy Month: January 2024 (36% renewable)
+
+Carbon Accounting Methodology:
+  Standard: GHG Protocol Scope 2 (location-based)
+  Emission Factors: EPA eGRID 2023 (ISO-NE region)
+  Hourly grid data: ISO New England real-time emissions
+  Baseline: Modeled ASHP consumption with same grid emissions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SYSTEM RELIABILITY & OPERATIONS
+
+Annual Availability:
+  Total Operating Hours: 8,784 (leap year)
+  Uptime: 8,706 hours (99.1%)
+  Planned Maintenance: 41.2 hours
+  Unplanned Downtime: 36.8 hours
+  System Availability: 99.1%
+
+Reliability by Quarter:
+Quarter    Uptime     Planned Maint.    Unplanned Outages    Availability
+Q1         99.3%      12.0 hrs          8.1 hrs              99.3%
+Q2         99.5%      8.0 hrs           3.2 hrs              99.5%
+Q3         99.6%      10.2 hrs          1.5 hrs              99.6%
+Q4         99.4%      11.0 hrs          7.8 hrs              99.4%
+
+Unplanned Outage Analysis:
+  Total Events: 6
+  Average Duration: 6.1 hours
+  Primary Causes:
+    • Pump seal failures: 2 events (18.2 hours total)
+    • Control system issues: 2 events (12.4 hours total)
+    • Distribution leak: 1 event (4.8 hours total)
+    • Electrical fault: 1 event (1.4 hours total)
+  
+  Load Impact: Zero thermal curtailment (backup systems engaged)
+  Customer Impact: No service interruptions to end users
+
+Maintenance Summary:
+  Preventive Maintenance Activities: 48 events
+  Emergency Repairs: 6 events  
+  Parts Replaced: 14 components
+  Total Maintenance Cost: $11,360
+  Cost Per Building Served: $324/year
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LOAD PROFILE & CAPACITY ANALYSIS
+
+Annual Load Characteristics:
+  Peak Thermal Demand: 337 kW (January 12, 6:00 AM, -2°F outdoor)
+  Minimum Thermal Demand: 8 kW (June 3, 3:00 AM, 68°F outdoor)
+  Average Thermal Demand: 210 kW
+  Annual Load Factor: 69% (ratio of average to peak)
+
+Capacity Utilization:
+  Total Network Capacity: 440 kW (geothermal heat pumps)
+  Peak Utilization: 77% (337 kW / 440 kW)
+  Average Utilization: 48%
+  Available Headroom: 103 kW (23%)
+
+[VISUAL: Load duration curve showing hours at various demand levels]
+
+Load Distribution by Building Type:
+  Residential (25 buildings):
+    • Share of Annual Load: 62% (1,145 MWh)
+    • Average Load Factor: 72%
+    • Peak Contribution: 209 kW
+
+  Commercial (8 buildings):
+    • Share of Annual Load: 32% (591 MWh)
+    • Average Load Factor: 64%
+    • Peak Contribution: 102 kW
+
+  Mixed-Use (2 buildings):
+    • Share of Annual Load: 6% (111 MWh)
+    • Average Load Factor: 68%
+    • Peak Contribution: 26 kW
+
+Peak Demand Analysis:
+  Top 10 Peak Hours of Year (avg): -4°F outdoor temperature
+  Winter Morning Peak (6-9 AM): Primary demand driver
+  Peak Coincidence Factor: 0.73 (diversity benefit vs individual peaks)
+  
+  Comparison to ASHP:
+    TEN Peak Electrical: 80 kW (COP 4.2 at design conditions)
+    ASHP Peak Electrical: 207 kW (COP 1.6 at design conditions)
+    Peak Demand Reduction: 127 kW (61%)
+
+Expansion Capacity:
+  Current Buildings: 35
+  Available Thermal Capacity: 103 kW
+  Estimated Additional Buildings (at 20 kW avg): 5 buildings
+  Path to 80% Target Capacity: Add 12 buildings (requires 80 kW)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BOREFIELD PERFORMANCE
+
+Geothermal Resource Analysis:
+  
+  Borefield 1 (Geothermal Heat Exchanger):
+    Annual Energy Extracted: 752 MWh
+    Annual Energy Rejected: 198 MWh
+    Net Energy Balance: -554 MWh (heating dominant)
+    Average Supply Temperature: 43°F
+    Capacity Utilization: 23.3%
+    Status: Excellent thermal recovery
+
+  Borefield 2 (Geothermal Heat Exchanger):
+    Annual Energy Extracted: 647 MWh
+    Annual Energy Rejected: 176 MWh
+    Net Energy Balance: -471 MWh (heating dominant)
+    Average Supply Temperature: 44°F
+    Capacity Utilization: 21.8%
+    Status: Excellent thermal recovery
+
+  Borefield 3 (Geothermal Heat Exchanger):
+    Annual Energy Extracted: 693 MWh
+    Annual Energy Rejected: 184 MWh
+    Net Energy Balance: -509 MWh (heating dominant)
+    Average Supply Temperature: 43°F
+    Capacity Utilization: 22.7%
+    Status: Excellent thermal recovery
+
+Ground Temperature Trends:
+  Start of Year (Jan 1): 48°F average
+  End of Year (Dec 31): 46°F average
+  Annual Thermal Depletion: 2°F
+  Sustainable Operation: ✓ (within 5°F annual variation threshold)
+  Summer Recharge: 4°F recovery during cooling season
+
+Long-Term Sustainability Assessment:
+  • Net heating load creates gradual ground cooling
+  • Summer cooling provides partial thermal recharge  
+  • Current depletion rate sustainable for 20+ years
+  • Recommend monitoring ground temperatures annually
+  • Consider load balancing strategies if adding significant heating load
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BUILDING PERFORMANCE ANALYSIS
+
+Top 10 Buildings by Energy Consumption:
+[TABLE: Comprehensive building metrics]
+Building  Type    Thermal   Elec Input  COP   vs ASHP      Cost        Carbon
+                  (MWh)     (MWh)            Savings      Savings     Avoided
+B15       Comm    225.4     53.7        4.2   35.6 MWh     $5,340      9.2 t
+B8        Res     196.4     46.8        4.2   30.1 MWh     $4,515      7.8 t
+B23       Res     187.5     44.6        4.2   28.7 MWh     $4,305      7.4 t
+B7        Comm    154.2     36.7        4.2   23.6 MWh     $3,540      6.1 t
+B31       Res     147.6     35.1        4.2   22.5 MWh     $3,375      5.8 t
+B12       Res     136.8     32.6        4.2   21.0 MWh     $3,150      5.4 t
+B9        Res     130.0     31.0        4.2   19.9 MWh     $2,985      5.1 t
+B19       Mix     119.4     28.4        4.2   18.3 MWh     $2,745      4.7 t
+B6        Res     113.6     27.0        4.2   17.4 MWh     $2,610      4.5 t
+B22       Res     106.5     25.4        4.2   16.3 MWh     $2,445      4.2 t
+Other 25  Mixed   429.9     102.6       4.2   65.9 MWh     $9,890      17.0 t
+──────────────────────────────────────────────────────────────────────────────
+Total     35      1,847.3   439.9       4.2   268.0 MWh    $40,200     69.2 t
+
+Performance Consistency:
+  Building COP Range: 4.1 - 4.3 (tight distribution)
+  Standard Deviation: 0.08 (highly consistent performance)
+  All Buildings Exceed Baseline: 100% (every building shows savings)
+
+Building Type Performance:
+                  Buildings    Avg COP    Avg Savings/Bldg    Total Savings
+Residential       25           4.2        $3,124              $78,100
+Commercial        8            4.1        $3,890              $31,120
+Mixed-Use         2            4.2        $2,890              $5,780
+────────────────────────────────────────────────────────────────────────
+Network Total     35           4.2        $3,286              $115,000
+
+Anomalous Performance:
+  No buildings flagged for investigation
+  All buildings within ±5% of expected performance
+  Model validation confirms accurate load predictions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WEATHER NORMALIZATION & CONTEXT
+
+2024 Weather Summary:
+  Annual Heating Degree Days (HDD): 5,847 (base 65°F)
+  Annual Cooling Degree Days (CDD): 782 (base 65°F)
+  vs 30-Year Normal HDD: 5,623 (4% colder than normal)
+  vs 30-Year Normal CDD: 758 (3% warmer than normal)
+
+Temperature Extremes:
+  Coldest Day: January 12 (-2°F) - Design day performance validated
+  Hottest Day: July 18 (94°F) - Cooling capacity confirmed
+  Days Below 32°F: 96 days (higher heating demand)
+  Days Above 85°F: 18 days (moderate cooling demand)
+
+Weather Impact on Performance:
+  Colder winter increased heating load by ~8% vs typical year
+  TEN advantage amplified during cold periods (ASHP degradation)
+  Mild summer reduced cooling load by ~2% vs typical year
+  Overall: Weather increased TEN economic value vs normal year
+
+Weather-Normalized Annual Performance:
+  Actual 2024 Savings: $114,333
+  Weather-Normalized Savings: $109,850 (typical year projection)
+  Weather Benefit: $4,483 (colder winter favored TEN vs ASHP)
+
+Climate Outlook:
+  Region trending toward milder winters (-0.3°F/decade)
+  Future TEN advantage may decrease slightly as ASHP cold-weather 
+    performance becomes less critical
+  Still expect 35%+ savings even in mild winters due to fundamental 
+    efficiency advantage
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COMPLIANCE & CERTIFICATIONS
+
+Regulatory Compliance:
+  ✓ IPMVP Option D - Calibrated Simulation (verified)
+  ✓ ASHRAE Guideline 14 - Model Calibration Standards (compliant)
+  ✓ ISO 50001 - Energy Management System (certified)
+  ✓ LEED v4.1 District Energy Credit (qualified)
+
+Utility Program Compliance:
+  Energy Efficiency Program:
+    Annual Savings Verified: 268 MWh
+    Incentive Earned: $21,440 ($0.08/kWh)
+    Next Audit: Q1 2025
+    Status: ✓ Compliant
+
+  Renewable Thermal Certificate Program:
+    Annual Renewable Thermal: 1,847 MWh
+    RTCs Issued: 1,847 (1 per MWh)
+    Market Value: $27,840 ($15/RTC)
+    Status: ✓ Compliant
+
+Third-Party Verification:
+  M&V Audit Date: November 2024
+  Auditor: [Certified M&V Professional]
+  Findings: No material exceptions
+  Model Calibration Verified: ✓
+  Measurement Infrastructure Verified: ✓
+  Next Audit: November 2025
+
+Certification Status:
+  • GHG Inventory: Verified to GHG Protocol standards
+  • Carbon Credits: Eligible for voluntary carbon markets
+  • Green Building: Qualifies for LEED district energy points
+  • Energy Star: Building portfolio tracking (in progress)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MEASUREMENT & VERIFICATION METHODOLOGY
+
+M&V Framework: IPMVP Option D (Calibrated Simulation)
+
+Measurement Infrastructure:
+  
+  Physical Metering (15 sensors):
+    • 6 BTU meters - Distribution loop thermal energy measurement
+    • 6 Electrical meters - Pump houses and heat pump consumption  
+    • 3 Borefield sensors - Ground loop temperature and flow
+    Total Investment: $47,500
+    Maintenance Cost: $2,400/year
+    
+  Virtual Metering (24 points):
+    • Building-level thermal load disaggregation
+    • ASHP baseline performance calculations
+    • Component-level energy attribution
+    • Continuous validation against physical sensors
+    Enabled by: Calibrated digital twin model
+    
+  Measurement Coverage: 98.4%
+  Data Frequency: 15-minute intervals (35,040 data points/year)
+  Data Quality: 99.7% valid (0.3% flagged/interpolated)
+
+Model Calibration Performance:
+  Calibration Method: Bayesian optimization with hourly data
+  CVRMSE: 26% (Hourly data - meets ASHRAE 14 requirement ≤30%)
+  NMBE: 9% (Hourly data - meets ASHRAE 14 requirement ≤10%)
+  ✓ ASHRAE Guideline 14 Compliant
+  
+  Calibration Period: Full year 2024 (8,784 hours)
+  Physical Sensors Used: All 15 sensors
+  Parameters Calibrated: 47 building/system parameters
+  Last Calibration: December 31, 2024
+  Next Recalibration: Monthly (automated process)
+
+Baseline Methodology:
+  System: Individual ASHP per building (HSPF 9, SEER 15)
+  Performance Model: Weather-dependent COP curves
+    • >47°F: COP 3.0-3.5
+    • 32-47°F: COP 2.5-3.0  
+    • <32°F: COP 1.6-2.5 (with degradation/defrost)
+  
+  Validation Sources:
+    • Manufacturer performance data (WaterFurnace, Mitsubishi)
+    • NEEP Cold Climate ASHP Database
+    • Field studies (NREL, NYSERDA)
+    • Regional installation performance data
+
+  Building Loads: Identical thermal demand as TEN measured loads
+  Weather Data: TMY3 + actual 2024 hourly observations
+  Grid Emissions: ISO-NE real-time marginal emissions data
+
+Uncertainty Analysis:
+  Measurement Uncertainty: ±2.5% (physical sensors)
+  Model Uncertainty: ±8.2% (CVRMSE)
+  Baseline Uncertainty: ±5.0% (ASHP performance assumptions)
+  Combined Uncertainty: ±10.1% (90% confidence interval)
+  
+  Reported Savings: 38% ± 3.8% (conservative estimate)
+
+Quality Assurance:
+  • Daily automated data validation
+  • Weekly model performance checks  
+  • Monthly calibration updates
+  • Quarterly third-party review
+  • Annual comprehensive audit
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+KEY INSIGHTS & RECOMMENDATIONS
+
+Performance Achievements:
+  ✓ Exceeded energy savings target (38% actual vs 35% projected)
+  ✓ Maintained 99%+ system uptime throughout year
+  ✓ Validated digital twin accuracy (CVRMSE 26%, within standards)
+  ✓ Achieved carbon reduction goals (87% vs ASHP baseline)
+  ✓ Generated $157k total economic value (savings + incentives)
+
+Operational Learnings:
+  • Cold weather performance confirms geothermal advantage over ASHP
+  • Virtual metering successfully enabled building-level attribution
+  • Centralized O&M delivered 85% cost savings vs distributed systems
+  • Ground thermal sustainability confirmed (2°F annual depletion acceptable)
+  • Peak demand reduction (38%) drives significant utility cost savings
+
+Areas for Optimization:
+  1. Pump Energy: 8.2% of total electrical - investigate VFD optimization
+  2. Load Balancing: Consider data center or cooling-dominant loads to 
+     improve annual ground thermal balance
+  3. Expansion Priority: 103 kW available capacity - target commercial 
+     buildings for higher load factors
+  4. Predictive Maintenance: Pump seal failures (2 events) - implement 
+     condition monitoring
+
+2025 Recommendations:
+  □ Expand network to 40-42 buildings (utilize available capacity)
+  □ Implement advanced pump optimization controls
+  □ Add data center thermal load for ground loop balancing
+  □ Enhance building submetering for granular end-use analysis
+  □ Pursue additional RTC revenue opportunities
+  □ Consider energy storage integration for demand charge reduction
+
+Investment Case:
+  Current Performance: $114k annual savings + $49k incentives = $163k/year
+  Expansion Potential: Add 7 buildings × $3,250 avg savings = $23k additional
+  Projected 2025 Value: $186k total annual economic benefit
+
+The Framingham Thermal Energy Network has demonstrated technical, economic, and 
+environmental performance that validates the business case for thermal networks 
+over individual building electrification. Virtual metering and digital twin M&V 
+provide the measurement rigor required for utility programs, carbon accounting, 
+and operational optimization.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+APPENDICES
+
+Appendix A: Monthly Performance Summary Tables
+Appendix B: Building-by-Building Detailed Analysis  
+Appendix C: Hourly Load Profiles and COP Performance
+Appendix D: Model Calibration Documentation
+Appendix E: Baseline ASHP Performance Assumptions
+Appendix F: Utility Rate Schedules and Tariffs
+Appendix G: Maintenance Log and Equipment Records
+Appendix H: Third-Party Verification Report
+Appendix I: Incentive Program Documentation
+Appendix J: Weather Data and Normalization Methodology
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Report Generated: January 15, 2025
+Generated by: Jouler | Thermal Network Intelligence Platform
+
+Certification: IPMVP Option D Compliant | ASHRAE Guideline 14 Verified
+Third-Party Verified: [M&V Professional Name], CMVP #[Number]
+
+Questions or data requests: support@jouler.com
+Detailed methodology: www.jouler.com/m-and-v-methodology
+API access for data integration: developers.jouler.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

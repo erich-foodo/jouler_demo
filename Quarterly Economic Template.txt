@@ -1,0 +1,244 @@
+FRAMINGHAM THERMAL NETWORK
+Quarterly Economic Performance Report
+Reporting Period: Q4 2024 (October - December)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXECUTIVE SUMMARY
+
+The Framingham Thermal Energy Network delivered $28,450 in cost savings during Q4 2024 
+compared to individual air-source heat pump systems, driven by superior energy efficiency 
+and reduced peak demand charges.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COST SAVINGS SUMMARY
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                         TEN Cost    ASHP Cost    Savings            │
+│                                                                       │
+│  Energy Charges        $16,248      $26,134      $9,886 (38%)       │
+│  Demand Charges        $3,264       $5,232       $1,968 (38%)       │
+│  ────────────────────────────────────────────────────────────────   │
+│  Total Utility Cost    $19,512      $31,366      $11,854 (38%)      │
+│                                                                       │
+│  Operations & Maint.   $2,840       $19,436      $16,596 (85%)      │
+│  ────────────────────────────────────────────────────────────────   │
+│  Total Operating Cost  $22,352      $50,802      $28,450 (56%)      │
+└─────────────────────────────────────────────────────────────────────┘
+
+[VISUAL: Stacked bar chart showing TEN vs ASHP costs broken down by category]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+UTILITY COST BREAKDOWN
+
+Energy Cost Analysis:
+                        October      November     December     Q4 Total
+TEN Energy Cost         $5,340       $5,187       $5,721       $16,248
+ASHP Energy Cost        $8,620       $8,354       $9,160       $26,134
+Monthly Savings         $3,280       $3,167       $3,439       $9,886
+
+Rate Structure Applied:
+  Energy Rate: $0.15/kWh (blended on-peak/off-peak)
+  Demand Rate: $16.00/kW (monthly peak)
+  Winter Peak Hours: 5-9 PM weekdays
+  Utility: [Local Utility Name]
+
+Demand Cost Analysis:
+                        October      November     December     Q4 Total
+TEN Peak Demand         72 kW        68 kW        75 kW        -
+ASHP Peak Demand        115 kW       109 kW       120 kW       -
+TEN Demand Cost         $1,152       $1,088       $1,200       $3,264
+ASHP Demand Cost        $1,840       $1,744       $1,920       $5,232
+Monthly Savings         $688         $656         $720         $1,968
+
+Peak Coincidence:
+  TEN peaks occur during mild morning hours (lower grid stress)
+  ASHP peaks during evening demand peaks (higher grid stress)
+  Average Peak Reduction: 38% vs ASHP baseline
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPERATIONS & MAINTENANCE COST COMPARISON
+
+TEN O&M Costs (Q4 2024):
+  Preventive Maintenance:        $1,680
+  Pump Electricity (auxiliary):  $847
+  System Monitoring:              $150
+  Emergency Repairs:              $163
+  ──────────────────────────────────────
+  Total O&M:                      $2,840
+
+ASHP O&M Costs (Modeled - 35 buildings):
+  Individual Unit Maintenance:    $12,250 ($350/unit avg)
+  Emergency Repairs/Service:      $5,425
+  Filter Replacements:            $1,050
+  Defrost System Maintenance:     $711
+  ──────────────────────────────────────
+  Total O&M:                      $19,436
+
+O&M Savings Drivers:
+  • Centralized maintenance vs 35 individual units
+  • Professional service contract vs building-by-building repairs
+  • No defrost cycle component failures
+  • Reduced compressor cycling wear
+  • Lower parts/labor cost per building served
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ENERGY PERFORMANCE METRICS
+
+Quarter Summary:
+  Total Thermal Delivered: 464 MWh
+  Total Electrical Input: 110 MWh
+  Average System COP: 4.2
+  Energy Savings vs ASHP: 67 MWh (38%)
+
+Monthly Energy Performance:
+Month       Thermal (MWh)    Electrical (MWh)    COP    Savings vs ASHP
+October     157              37                  4.3    23 MWh (38%)
+November    145              35                  4.2    21 MWh (38%)
+December    162              38                  4.3    23 MWh (38%)
+
+System Reliability:
+  Uptime: 99.3% (5.2 hours downtime across quarter)
+  Unplanned Outages: 1 event (2.1 hours, pump seal replacement)
+  Load Served: 100% (no thermal curtailment events)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COST ALLOCATION BY BUILDING
+
+Building-Level Economic Impact (Top 10):
+[TABLE: Cost savings by building]
+Building    Thermal (kWh)    TEN Cost    ASHP Cost    Savings      % Saved
+B15         56,340          $2,234      $3,603       $1,369       38%
+B8          48,920          $1,940      $3,126       $1,186       38%
+B23         46,780          $1,856      $2,991       $1,135       38%
+B7          38,450          $1,525      $2,458       $933         38%
+B31         36,890          $1,463      $2,358       $895         38%
+B12         34,120          $1,353      $2,181       $828         38%
+B9          32,450          $1,287      $2,074       $787         38%
+B19         29,780          $1,181      $1,903       $722         38%
+B6          28,340          $1,124      $1,811       $687         38%
+B22         26,550          $1,053      $1,697       $644         38%
+Other (25)  125,610         $4,984      $8,034       $3,050       38%
+──────────────────────────────────────────────────────────────────────────
+Total       464,230         $18,000     $32,236      $14,236      44%
+
+Note: Building costs include proportional share of energy, demand, and O&M
+ASHP costs modeled for equivalent thermal delivery per building
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+YEAR-TO-DATE FINANCIAL PERFORMANCE (2024)
+
+Cumulative Savings (Jan - Dec 2024):
+  Total Energy Savings:      $39,544
+  Total Demand Savings:      $7,872
+  Total O&M Savings:         $66,384
+  ──────────────────────────────────────
+  Total Cost Avoidance:      $113,800
+
+Annual Run Rate Metrics:
+  Average Monthly Savings: $9,483
+  Cost Avoidance Rate: 56% vs ASHP baseline
+  Payback Contribution: $113,800 toward capital cost recovery
+
+[VISUAL: Cumulative quarterly savings chart showing progression through year]
+
+Quarterly Breakdown (2024):
+Quarter    Energy Savings    O&M Savings    Total Savings
+Q1         $9,842           $16,594         $26,436
+Q2         $5,234           $16,198         $21,432
+Q3         $7,922           $16,996         $24,918
+Q4         $11,854          $16,596         $28,450
+────────────────────────────────────────────────────────
+Total      $28,852          $66,384         $113,800
+
+Note: Q4 shows higher savings due to increased heating load and greater 
+TEN efficiency advantage in cold weather conditions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ECONOMIC CONTEXT
+
+Weather Impact on Economics:
+  Q4 Heating Degree Days: 2,184 HDD (11% above 10-year average)
+  Colder quarter = increased heating load = greater TEN advantage
+  ASHP efficiency degradation at <32°F drove 42% of Q4 savings
+
+Utility Rate Environment:
+  No rate changes during Q4 2024
+  Winter rates remained stable at $0.15/kWh blended
+  Demand charges: $16/kW (unchanged)
+
+Market Comparison:
+  Regional ASHP installations (2024): Average $14,500/unit installed
+  TEN avoided capital (if retrofit): $507,500 (35 units × $14,500)
+  Annual operating savings: $113,800 (22.5% return on avoided capital)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INCENTIVE & REBATE TRACKING
+
+Q4 2024 Incentive Performance:
+  
+  Utility Energy Efficiency Program:
+    Q4 Energy Savings: 67 MWh
+    Incentive Rate: $0.08/kWh saved
+    Q4 Incentive Value: $5,360
+    YTD Total Earned: $21,440
+
+  Renewable Thermal Certificate (RTC) Program:
+    Q4 Thermal Generated: 464 MWh
+    RTC Rate: $15/MWh (renewable thermal)
+    Q4 RTC Value: $6,960
+    YTD Total Earned: $27,840
+
+  Total Q4 Incentives: $12,320
+  Total 2024 Incentives: $49,280
+
+Status: All incentive documentation submitted via automated reporting
+Next Review: January 15, 2025 (Annual verification audit)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+METHODOLOGY & MEASUREMENT
+
+M&V Approach: IPMVP Option D (Calibrated Simulation)
+
+Economic Baseline:
+  • ASHP System: Individual 9 HSPF / 15 SEER units per building
+  • Installation cost: $14,500/unit average (35 units)
+  • O&M costs: Industry average $350/unit/quarter + repairs
+  • Energy consumption: Weather-adjusted hourly performance model
+  • Demand charges: Building-level peak aggregation
+
+Cost Assumptions:
+  • Utility rates: Actual tariff from [Utility Name]
+  • O&M labor: Regional HVAC technician rates
+  • Parts/materials: Market pricing (2024)
+  • Inflation adjustment: 2.8% annual (CPI)
+
+Measurement Infrastructure:
+  Physical Metering: 15 sensors (energy, flow, temperature)
+  Virtual Metering: 24 building-level points
+  Financial Tracking: Automated invoice reconciliation
+  Model Calibration: CVRMSE 26%, NMBE 9% (hourly - compliant)
+  Last Validated: December 31, 2024
+
+All cost calculations verified against actual utility bills and maintenance records.
+Baseline ASHP costs derived from regional market data and manufacturer specifications.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Report Generated: January 10, 2025
+Generated by: Jouler | Thermal Network Intelligence Platform
+Certification: IPMVP Compliant | ASHRAE Guideline 14 Verified
+
+Questions or data requests: support@jouler.com
+Methodology documentation: www.jouler.com/m-and-v-methodology
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

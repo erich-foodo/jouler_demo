@@ -50,6 +50,13 @@ export class ThermalNetworkDataProcessor {
         celsius: row.outdoor_air_temp_c,
         fahrenheit: row.outdoor_air_temp_f
       },
+      systemData: {
+        massFlowKgs: row.mass_flow_kgs,
+        borefield1HeatW: row.borefield_1_heat_w,
+        borefield2HeatW: row.borefield_2_heat_w,
+        borefield3HeatW: row.borefield_3_heat_w,
+        totalBorefieldHeatW: row.total_borefield_heat_w
+      },
       buildings: {}
     };
 

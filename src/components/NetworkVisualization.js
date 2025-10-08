@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 
-const NetworkVisualization = ({ data, onNodeSelect, selectedNode, currentHour }) => {
+const NetworkVisualization = ({ data, systemData, onNodeSelect, selectedNode, currentHour }) => {
   const svgRef = useRef();
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
 
@@ -203,9 +203,27 @@ const NetworkVisualization = ({ data, onNodeSelect, selectedNode, currentHour })
         } else if (d.type === 'borefield') {
           content += `<br/>Geothermal heat source/sink`;
           content += `<br/>Ground temperature: 55°F`;
+          
+          // Add borefield heat data
+          if (systemData) {
+            let heatValue = 0;
+            if (d.id === 'borefield_1') heatValue = systemData.borefield1HeatW;
+            else if (d.id === 'borefield_2') heatValue = systemData.borefield2HeatW;
+            else if (d.id === 'borefield_3') heatValue = systemData.borefield3HeatW;
+            
+            if (heatValue) {
+              const heatKw = heatValue / 1000;
+              content += `<br/>Heat Supply: ${heatKw.toFixed(1)} kW`;
+            }
+          }
         } else if (d.type === 'pump') {
           content += `<br/>Main circulation pump`;
           content += `<br/>Circulates fluid through network`;
+          
+          // Add mass flow data
+          if (systemData && systemData.massFlowKgs) {
+            content += `<br/>Mass Flow: ${systemData.massFlowKgs.toFixed(2)} kg/s`;
+          }
         }
         
         setTooltip({
@@ -261,6 +279,21 @@ const NetworkVisualization = ({ data, onNodeSelect, selectedNode, currentHour })
         }
       });
 
+    // Add physical meter indicators for specific buildings
+    const physicalMeterBuildings = ['b_1', 'b_3', 'b_4', 'b_15', 'b_16', 'b_36']; // Fire Dept, Corner Cabinet, Public School, R10, R11, R31
+    
+    g.selectAll('.meter-indicator')
+      .data(enhancedNodes.filter(d => physicalMeterBuildings.includes(d.id)))
+      .join('text')
+      .attr('class', 'meter-indicator')
+      .attr('x', d => d.x)
+      .attr('y', d => d.y + 3)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '10px')
+      .attr('font-weight', 'bold')
+      .attr('fill', '#ffffff')
+      .text('P');
+
     // Add legend
     const legend = svg.append('g')
       .attr('transform', `translate(30, 30)`);
@@ -296,7 +329,7 @@ const NetworkVisualization = ({ data, onNodeSelect, selectedNode, currentHour })
         .text(item.label);
     });
 
-  }, [data, selectedNode, onNodeSelect, currentHour]);
+  }, [data, systemData, selectedNode, onNodeSelect, currentHour]);
 
   return (
     <div className="relative">
