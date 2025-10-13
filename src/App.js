@@ -60,9 +60,9 @@ function App() {
 
     // Define which buildings are served by each borefield
     const buildingsByBorefield = {
-      'borefield_1': Array.from({length: 21}, (_, i) => `b_${i + 16}`), // R11-R31 (buildings 16-36)
-      'borefield_2': ['b_1', 'b_2', 'b_3'], // Fire Dept, Gulf, Corner Cabinet
-      'borefield_3': ['b_4', 'b_5'].concat(Array.from({length: 10}, (_, i) => `b_${i + 6}`)) // Public School, Housing Dept, R1-R10 (buildings 4,5,6-15)
+      'borefield_1': ['b_1', 'b_2', 'b_3'], // Fire Dept, Gulf, Corner Cabinet
+      'borefield_2': ['b_4', 'b_5'].concat(Array.from({length: 10}, (_, i) => `b_${i + 6}`)), // Public School, Housing Dept, R1-R10 (buildings 4,5,6-15)
+      'borefield_3': Array.from({length: 21}, (_, i) => `b_${i + 16}`) // R11-R31 (buildings 16-36)
     };
 
     const buildingsBeforeBorefield = buildingsByBorefield[borefieldId] || [];
@@ -111,6 +111,111 @@ function App() {
     return { 
       savings: totalSavings / 1000, // Convert to kWh
       economicValue: economicValue / 1000 // Convert to dollars
+    };
+  };
+
+  // Calculate borefield-specific energy savings
+  const calculateBorefieldSavings = (borefieldId) => {
+    if (!dataProcessor.processedData || dataProcessor.processedData.length === 0) {
+      return { 
+        energySavings: 0, 
+        economicValue: 0, 
+        demandSavings: 0, 
+        capacityValue: 0,
+        buildingsServed: 0,
+        efficiencyGain: 0
+      };
+    }
+
+    // Define which buildings are served by each borefield
+    const buildingsByBorefield = {
+      'borefield_1': ['b_1', 'b_2', 'b_3'], // Fire Dept, Gulf, Corner Cabinet
+      'borefield_2': ['b_4', 'b_5'].concat(Array.from({length: 10}, (_, i) => `b_${i + 6}`)), // Public School, Housing Dept, R1-R10 (buildings 4,5,6-15)
+      'borefield_3': Array.from({length: 21}, (_, i) => `b_${i + 16}`) // R11-R31 (buildings 16-36)
+    };
+
+    const buildingsInBorefield = buildingsByBorefield[borefieldId] || [];
+    
+    // Calculate total energy savings and monthly demand pattern for this borefield's buildings
+    let totalSavings = 0;
+    let annualMaxGeoLoad = 0;
+    let annualMaxAirLoad = 0;
+    const hoursPerMonth = 730; // Approximate hours per month
+    let totalMonthlyDemandDifference = 0;
+
+    // Calculate annual energy savings (all hours)
+    dataProcessor.processedData.forEach(hourData => {
+      let hourlyGeoElectric = 0;
+      let hourlyAirElectric = 0;
+
+      // Sum electric consumption for buildings served by this borefield
+      buildingsInBorefield.forEach(buildingId => {
+        if (hourData.buildings && hourData.buildings[buildingId]) {
+          const building = hourData.buildings[buildingId];
+          hourlyGeoElectric += building.geo?.electric || 0;
+          hourlyAirElectric += building.air?.electric || 0;
+        }
+      });
+
+      // Track hourly savings
+      const hourlySavings = hourlyAirElectric - hourlyGeoElectric;
+      totalSavings += hourlySavings;
+
+      // Track annual peak loads for capacity calculations
+      annualMaxGeoLoad = Math.max(annualMaxGeoLoad, hourlyGeoElectric);
+      annualMaxAirLoad = Math.max(annualMaxAirLoad, hourlyAirElectric);
+    });
+
+    // Calculate monthly demand differences (following the same pattern as calculateMonthlyDemand)
+    for (let month = 0; month < 12; month++) {
+      const startHour = month * hoursPerMonth;
+      const endHour = Math.min((month + 1) * hoursPerMonth, dataProcessor.processedData.length);
+      const monthData = dataProcessor.processedData.slice(startHour, endHour);
+      
+      if (monthData.length > 0) {
+        let monthlyMaxGeo = 0;
+        let monthlyMaxAir = 0;
+
+        monthData.forEach(hourData => {
+          let hourlyGeoElectric = 0;
+          let hourlyAirElectric = 0;
+
+          // Sum electric consumption for buildings served by this borefield
+          buildingsInBorefield.forEach(buildingId => {
+            if (hourData.buildings && hourData.buildings[buildingId]) {
+              const building = hourData.buildings[buildingId];
+              hourlyGeoElectric += building.geo?.electric || 0;
+              hourlyAirElectric += building.air?.electric || 0;
+            }
+          });
+
+          monthlyMaxGeo = Math.max(monthlyMaxGeo, hourlyGeoElectric);
+          monthlyMaxAir = Math.max(monthlyMaxAir, hourlyAirElectric);
+        });
+
+        const monthlyDemandDifference = (monthlyMaxAir - monthlyMaxGeo) / 1000; // Convert W to kW
+        totalMonthlyDemandDifference += monthlyDemandDifference;
+      }
+    }
+
+    const energySavings = totalSavings / 1000; // Convert Wh to kWh (totalSavings is already in Wh)
+    const energyEconomicValue = energySavings * 0.15; // $0.15 per kWh for energy savings
+    const demandSavings = totalMonthlyDemandDifference; // Sum of monthly peak differences (already in kW)
+    const demandEconomicValue = demandSavings * 15; // $15 per kW for demand savings 
+    const capacitySavings = (annualMaxAirLoad - annualMaxGeoLoad) / 1000; // Annual peak difference in kW
+    const capacityEconomicValue = capacitySavings * 200; // $200 per kW for capacity value
+    const efficiencyGain = annualMaxAirLoad > 0 ? ((annualMaxAirLoad - annualMaxGeoLoad) / annualMaxAirLoad) * 100 : 0;
+
+    return {
+      energySavings: Math.max(0, energySavings),
+      energyEconomicValue: Math.max(0, energyEconomicValue),
+      demandSavings: Math.max(0, demandSavings), 
+      demandEconomicValue: Math.max(0, demandEconomicValue),
+      capacitySavings: Math.max(0, capacitySavings),
+      capacityEconomicValue: Math.max(0, capacityEconomicValue),
+      totalEconomicValue: Math.max(0, energyEconomicValue + demandEconomicValue + capacityEconomicValue),
+      buildingsServed: buildingsInBorefield.length,
+      efficiencyGain: Math.max(0, efficiencyGain)
     };
   };
 
@@ -1152,7 +1257,7 @@ function App() {
                           Annual Energy Savings
                         </div>
                         <div className="text-3xl font-bold text-green-900 mt-2">
-                          {annualSavings.savings.toFixed(0)} kWh
+                          {annualSavings.savings.toLocaleString('en-US', {maximumFractionDigits: 0})} kWh
                         </div>
                         <div className="text-xs text-green-600 mt-1">
                           TEN vs ASHP systems
@@ -1164,7 +1269,7 @@ function App() {
                           Economic Value
                         </div>
                         <div className="text-3xl font-bold text-blue-900 mt-2">
-                          ${annualSavings.economicValue.toFixed(0)}
+                          ${annualSavings.economicValue.toLocaleString('en-US', {maximumFractionDigits: 0})}
                         </div>
                         <div className="text-xs text-blue-600 mt-1">
                           Annual savings at $0.15/kWh
@@ -1202,7 +1307,7 @@ function App() {
                           Total Demand Reduction
                         </div>
                         <div className="text-3xl font-bold text-orange-900 mt-2">
-                          {monthlyDemand.monthlyData.reduce((sum, m) => sum + m.difference, 0).toFixed(1)} kW
+                          {monthlyDemand.monthlyData.reduce((sum, m) => sum + m.difference, 0).toLocaleString('en-US', {maximumFractionDigits: 1})} kW
                         </div>
                         <div className="text-xs text-orange-600 mt-1">
                           Sum of monthly peak differences
@@ -1214,7 +1319,7 @@ function App() {
                           Economic Value
                         </div>
                         <div className="text-3xl font-bold text-red-900 mt-2">
-                          ${monthlyDemand.economicValue.toFixed(0)}
+                          ${monthlyDemand.economicValue.toLocaleString('en-US', {maximumFractionDigits: 0})}
                         </div>
                         <div className="text-xs text-red-600 mt-1">
                           Annual savings at $15/kW
@@ -1226,7 +1331,7 @@ function App() {
                           Average Monthly Reduction
                         </div>
                         <div className="text-3xl font-bold text-gray-900 mt-2">
-                          {(monthlyDemand.monthlyData.reduce((sum, m) => sum + m.difference, 0) / 12).toFixed(1)} kW
+                          {(monthlyDemand.monthlyData.reduce((sum, m) => sum + m.difference, 0) / 12).toLocaleString('en-US', {maximumFractionDigits: 1})} kW
                         </div>
                         <div className="text-xs text-gray-600 mt-1">
                           Per month peak demand savings
@@ -1252,10 +1357,10 @@ function App() {
                           TEN Peak Load
                         </div>
                         <div className="text-3xl font-bold text-green-900 mt-2">
-                          {capacityComparison.geoMax.toFixed(1)} kW
+                          {capacityComparison.geoMax.toLocaleString('en-US', {maximumFractionDigits: 1})} kW
                         </div>
                         <div className="text-xs text-green-600 mt-1">
-                          Hour {capacityComparison.geoHour} of year
+                          Hour {capacityComparison.geoHour.toLocaleString('en-US')} of year
                         </div>
                       </div>
                       
@@ -1264,10 +1369,10 @@ function App() {
                           ASHP Peak Load
                         </div>
                         <div className="text-3xl font-bold text-red-900 mt-2">
-                          {capacityComparison.airMax.toFixed(1)} kW
+                          {capacityComparison.airMax.toLocaleString('en-US', {maximumFractionDigits: 1})} kW
                         </div>
                         <div className="text-xs text-red-600 mt-1">
-                          Hour {capacityComparison.airHour} of year
+                          Hour {capacityComparison.airHour.toLocaleString('en-US')} of year
                         </div>
                       </div>
                       
@@ -1276,7 +1381,7 @@ function App() {
                           Capacity Reduction
                         </div>
                         <div className="text-3xl font-bold text-blue-900 mt-2">
-                          {(capacityComparison.airMax - capacityComparison.geoMax).toFixed(1)} kW
+                          {(capacityComparison.airMax - capacityComparison.geoMax).toLocaleString('en-US', {maximumFractionDigits: 1})} kW
                         </div>
                         <div className="text-xs text-blue-600 mt-1">
                           TEN advantage
@@ -1288,7 +1393,7 @@ function App() {
                           Economic Value
                         </div>
                         <div className="text-3xl font-bold text-purple-900 mt-2">
-                          ${capacityComparison.economicValue.toFixed(0)}
+                          ${capacityComparison.economicValue.toLocaleString('en-US', {maximumFractionDigits: 0})}
                         </div>
                         <div className="text-xs text-purple-600 mt-1">
                           Annual savings at $200/kW
@@ -1394,6 +1499,125 @@ function App() {
                       <div className="text-sm text-gray-600 text-center">
                         <strong>Economic Analysis:</strong> Levelized cost calculation based on 10% IRR and 50-year operational lifespan. 
                         Thermal service represents combined annual heating and cooling capacity delivered by each borefield.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Individual Borefield Energy Savings */}
+                  <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                    <div className="flex items-center mb-6">
+                      <span className="text-2xl mr-3">⚡</span>
+                      <h3 className="text-xl font-semibold text-gray-900">Borefield-Specific Energy Savings</h3>
+                    </div>
+                    <p className="text-gray-600 mb-6 text-center">
+                      Energy efficiency and economic benefits broken down by each borefield based on the buildings served
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {(() => {
+                        const borefields = [
+                          { id: 'borefield_1', name: 'Borefield 1', color: 'blue', buildings: 'Fire Dept, Gulf, Corner Cabinet (3 buildings)' },
+                          { id: 'borefield_2', name: 'Borefield 2', color: 'green', buildings: 'Public School, Housing Dept, R1-R10 (12 buildings)' },
+                          { id: 'borefield_3', name: 'Borefield 3', color: 'purple', buildings: 'R11-R31 (21 buildings)' }
+                        ];
+
+                        return borefields.map(bf => {
+                          const savings = calculateBorefieldSavings(bf.id);
+                          
+                          const colorClasses = {
+                            blue: { 
+                              bg: 'bg-blue-50', 
+                              border: 'border-blue-200', 
+                              text: 'text-blue-900',
+                              accent: 'text-blue-600'
+                            },
+                            green: { 
+                              bg: 'bg-green-50', 
+                              border: 'border-green-200', 
+                              text: 'text-green-900',
+                              accent: 'text-green-600'
+                            },
+                            purple: { 
+                              bg: 'bg-purple-50', 
+                              border: 'border-purple-200', 
+                              text: 'text-purple-900',
+                              accent: 'text-purple-600'
+                            }
+                          };
+
+                          const colors = colorClasses[bf.color];
+
+                          return (
+                            <div key={bf.id} className={`${colors.bg} rounded-lg p-6 border-2 ${colors.border}`}>
+                              <div className="text-center mb-4">
+                                <h4 className={`text-lg font-semibold ${colors.text}`}>{bf.name}</h4>
+                                <p className={`text-sm ${colors.accent} mt-1`}>{bf.buildings}</p>
+                              </div>
+                              
+                              {/* Individual Metrics */}
+                              <div className="space-y-3 mb-4">
+                                <div className="grid grid-cols-3 gap-3">
+                                  <div className="bg-white rounded-lg p-3 border border-gray-200 text-center">
+                                    <div className={`text-xs ${colors.accent} font-medium uppercase tracking-wide`}>
+                                      Energy Efficiency
+                                    </div>
+                                    <div className={`text-lg font-bold ${colors.text} mt-1`}>
+                                      {savings.energySavings.toLocaleString('en-US', {maximumFractionDigits: 0})}
+                                    </div>
+                                    <div className={`text-xs ${colors.accent}`}>kWh</div>
+                                  </div>
+                                  
+                                  <div className="bg-white rounded-lg p-3 border border-gray-200 text-center">
+                                    <div className={`text-xs ${colors.accent} font-medium uppercase tracking-wide`}>
+                                      Demand Savings
+                                    </div>
+                                    <div className={`text-lg font-bold ${colors.text} mt-1`}>
+                                      {savings.demandSavings.toLocaleString('en-US', {maximumFractionDigits: 1})}
+                                    </div>
+                                    <div className={`text-xs ${colors.accent}`}>kW</div>
+                                  </div>
+                                  
+                                  <div className="bg-white rounded-lg p-3 border border-gray-200 text-center">
+                                    <div className={`text-xs ${colors.accent} font-medium uppercase tracking-wide`}>
+                                      Capacity Savings
+                                    </div>
+                                    <div className={`text-lg font-bold ${colors.text} mt-1`}>
+                                      {savings.capacitySavings.toLocaleString('en-US', {maximumFractionDigits: 1})}
+                                    </div>
+                                    <div className={`text-xs ${colors.accent}`}>kW</div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Prominent Total Economic Value */}
+                              <div className={`bg-gradient-to-r ${bf.color === 'blue' ? 'from-blue-600 to-blue-700' : bf.color === 'green' ? 'from-green-600 to-green-700' : 'from-purple-600 to-purple-700'} rounded-lg p-4 text-white text-center shadow-lg`}>
+                                <div className="text-sm font-medium uppercase tracking-wide opacity-90">
+                                  Total Annual Economic Value
+                                </div>
+                                <div className="text-3xl font-bold mt-2">
+                                  ${savings.totalEconomicValue.toLocaleString('en-US', {maximumFractionDigits: 0})}
+                                </div>
+                                <div className="text-xs opacity-80 mt-1">
+                                  Energy + Demand + Capacity Savings
+                                </div>
+                              </div>
+                              
+                              {/* Building count */}
+                              <div className="bg-white bg-opacity-80 rounded-lg p-2 border border-gray-200 mt-3">
+                                <div className={`text-xs ${colors.accent} text-center`}>
+                                  Buildings Served: <span className={`font-semibold ${colors.text}`}>{savings.buildingsServed}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                    
+                    <div className="mt-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="text-sm text-gray-600 text-center">
+                        <strong>Analysis Notes:</strong> Energy savings calculated based on buildings served by each borefield. 
+                        Demand savings reflect peak load differences. Capacity value represents avoided infrastructure costs at $200/kW annually.
                       </div>
                     </div>
                   </div>
