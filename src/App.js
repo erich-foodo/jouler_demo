@@ -3,11 +3,14 @@ import { ThermalNetworkDataProcessor } from './utils/dataProcessor';
 import NetworkVisualization from './components/NetworkVisualization';
 import EfficiencyDashboard from './components/EfficiencyDashboard';
 import AssetValuation from './components/AssetValuation';
+import LandingPage from './components/LandingPage';
+import About from './components/About';
 import * as d3 from 'd3';
 import jsPDF from 'jspdf';
 import './App.css';
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'about', 'demo'
   const [dataProcessor] = useState(new ThermalNetworkDataProcessor());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -99,6 +102,18 @@ function App() {
 
   const handleHourChange = (hour) => {
     setCurrentHour(parseInt(hour));
+  };
+
+  const handleEnterDemo = () => {
+    setCurrentPage('demo');
+  };
+
+  const handleShowAbout = () => {
+    setCurrentPage('about');
+  };
+
+  const handleBackToLanding = () => {
+    setCurrentPage('landing');
   };
 
   // Helper functions for Performance Validation calculations
@@ -889,6 +904,14 @@ function App() {
     return <svg ref={svgRef} width={1000} height={410} className="mx-auto"></svg>;
   };
 
+  if (currentPage === 'landing') {
+    return <LandingPage onEnterDemo={handleEnterDemo} onShowAbout={handleShowAbout} />;
+  }
+
+  if (currentPage === 'about') {
+    return <About onBackToLanding={handleBackToLanding} />;
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -936,13 +959,24 @@ function App() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Jouler - The TEN Intelligence Platform
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Real-Time M&V Platform for Thermal Networks
-              </p>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setCurrentPage('landing')}
+                className="text-green-600 hover:text-green-700 font-medium text-sm flex items-center space-x-1"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/>
+                </svg>
+                <span>Back to Home</span>
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Jouler - The TEN Intelligence Platform
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  Real-Time M&V Platform for Thermal Networks
+                </p>
+              </div>
             </div>
             
             {/* Hour Control */}
