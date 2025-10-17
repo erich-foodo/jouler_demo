@@ -77,8 +77,17 @@ function About({ onBackToLanding }) {
               <p className="text-lg mb-4">
                 At Jouler, we're dedicated to advancing the deployment and optimization of thermal energy networks through comprehensive measurement & verification technology.
               </p>
-              <p className="text-lg">
+              <p className="text-lg mb-6">
                 Our platform enables utilities, developers, and communities to maximize the efficiency and economic value of thermal network investments while contributing to a more sustainable energy future.
+              </p>
+              <p className="text-lg font-medium text-green-600">
+                Interested in talking TENs? Reach out to{' '}
+                <a 
+                  href="mailto:erich@jouler.net" 
+                  className="underline hover:text-green-700 transition-colors"
+                >
+                  erich@jouler.net
+                </a>
               </p>
             </div>
           </div>
